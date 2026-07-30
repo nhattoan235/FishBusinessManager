@@ -11,10 +11,9 @@ abstract class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         surface: AppColors.surface,
-        background: AppColors.background,
         error: AppColors.expense,
       ),
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: AppColors.surface,
       fontFamily: 'Roboto',
 
       // Typography
@@ -40,7 +39,7 @@ abstract class AppTheme {
       ),
 
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 1,
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),

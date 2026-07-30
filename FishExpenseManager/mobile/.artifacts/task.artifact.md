@@ -1,0 +1,4 @@
+- `[x]` Fix compilation error in `lib/app/theme/app_theme.dart`
+- `[x]` Fix compilation errors in `test/widget_test.dart`
+- `[/]` Verify fixes with `flutter analyze`
+- `[ ]` Provide environment setup instructions

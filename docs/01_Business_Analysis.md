@@ -113,18 +113,15 @@ Toàn bộ dữ liệu do Chủ cửa hàng tự nhập.
 
 ## Sản phẩm
 
-Phiên bản đầu tiên chỉ có:
+Hệ thống quản lý sản phẩm theo mô hình danh mục ngay từ phiên bản 1, gồm:
 
-- Chứng nước
+- Danh mục sản phẩm (ví dụ: Chứng nước, Cá giống, Thức ăn, Thuốc, Vật tư).
+- Đơn vị tính (ví dụ: kg, bao, con, thùng).
+- Sản phẩm cụ thể, thuộc một danh mục và có một đơn vị tính mặc định.
 
-Tuy nhiên hệ thống được thiết kế để sau này có thể mở rộng thêm sản phẩm khác.
+Mặt hàng chính của gia đình là **Chứng nước**, được nhập sẵn (seed) là sản phẩm đầu tiên khi cài đặt ứng dụng lần đầu. Người dùng có thể thêm sản phẩm khác bất cứ lúc nào mà không cần cập nhật ứng dụng, vì cấu trúc dữ liệu đã hỗ trợ đa sản phẩm từ đầu (xem `04_Data_Dictionary_and_Database_Design.md`).
 
-Ví dụ:
-
-- Cá giống
-- Thức ăn
-- Thuốc
-- Vật tư
+Giao diện Bán hàng vẫn tuân thủ nguyên tắc đơn giản: nếu người dùng chỉ có một sản phẩm đang kinh doanh, hệ thống tự động chọn sẵn sản phẩm đó và ẩn bước "chọn sản phẩm" để giữ thao tác nhanh — không phải vì hệ thống chỉ hỗ trợ một sản phẩm, mà vì giao diện thích ứng theo dữ liệu thực tế của người dùng.
 
 ---
 

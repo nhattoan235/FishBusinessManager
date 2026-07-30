@@ -1,4 +1,4 @@
-# 08_Naming_Convention.md
+# 11_Naming_Convention.md
 
 > Version: 1.0
 >
@@ -741,18 +741,21 @@ Không sửa Migration cũ sau khi phát hành.
 Tên tài liệu
 
 ```
+00_Project_Vision.md
 01_Business_Analysis.md
-
-02_UseCase_Specification.md
-
-03_Business_Rules.md
-
-...
-
-09_Database_Design.md
+02_Business_Rules.md
+03_Use_Cases.md
+04_Data_Dictionary_and_Database_Design.md
+05_UI_UX_Design.md
+06_Screen_Specification.md
+07_User_Flow.md
+08_Architecture_Design.md
+09_Drift_Database_Implementation.md
+10_Data_Protection.md
+11_Naming_Convention.md
 ```
 
-Luôn đánh số thứ tự.
+Luôn đánh số thứ tự. Khi một tài liệu thay thế hoàn toàn một tài liệu cũ (ví dụ gộp hoặc viết lại), tài liệu cũ phải được xóa khỏi repo, không giữ lại song song — xem `CHANGELOG.md` để biết lịch sử các quyết định thay thế.
 
 ---
 

@@ -306,12 +306,16 @@ Sau khi sử dụng ổn định mới phát triển thêm:
 # 13. Tài liệu liên quan
 
 - 01_Business_Analysis.md
-- 02_UseCase_Specification.md
-- 03_Business_Rules.md
-- 04_UI_UX_Guideline.md
-- 05_Backup_And_Recovery.md
-- 06_Database_Design.md
-- 07_Wireframe_Design.md
+- 02_Business_Rules.md
+- 03_Use_Cases.md
+- 04_Data_Dictionary_and_Database_Design.md
+- 05_UI_UX_Design.md
+- 06_Screen_Specification.md
+- 07_User_Flow.md
+- 08_Architecture_Design.md
+- 09_Drift_Database_Implementation.md
+- 10_Data_Protection.md
+- 11_Naming_Convention.md
 
 ---
 

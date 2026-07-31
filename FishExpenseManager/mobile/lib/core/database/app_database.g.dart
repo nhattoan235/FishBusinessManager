@@ -4708,6 +4708,16 @@ class $AppSettingsTable extends AppSettings
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("use_google_drive" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _useBoldFontMeta =
+      const VerificationMeta('useBoldFont');
+  @override
+  late final GeneratedColumn<bool> useBoldFont = GeneratedColumn<bool>(
+      'use_bold_font', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("use_bold_font" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _updatedAtMeta =
       const VerificationMeta('updatedAt');
   @override
@@ -4725,6 +4735,7 @@ class $AppSettingsTable extends AppSettings
         backupInterval,
         keepBackupDays,
         useGoogleDrive,
+        useBoldFont,
         updatedAt
       ];
   @override
@@ -4772,6 +4783,12 @@ class $AppSettingsTable extends AppSettings
           useGoogleDrive.isAcceptableOrUnknown(
               data['use_google_drive']!, _useGoogleDriveMeta));
     }
+    if (data.containsKey('use_bold_font')) {
+      context.handle(
+          _useBoldFontMeta,
+          useBoldFont.isAcceptableOrUnknown(
+              data['use_bold_font']!, _useBoldFontMeta));
+    }
     if (data.containsKey('updated_at')) {
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
@@ -4799,6 +4816,8 @@ class $AppSettingsTable extends AppSettings
           .read(DriftSqlType.int, data['${effectivePrefix}keep_backup_days'])!,
       useGoogleDrive: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}use_google_drive'])!,
+      useBoldFont: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}use_bold_font'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
     );
@@ -4818,6 +4837,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
   final int backupInterval;
   final int keepBackupDays;
   final bool useGoogleDrive;
+  final bool useBoldFont;
   final DateTime updatedAt;
   const AppSettingData(
       {required this.id,
@@ -4827,6 +4847,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       required this.backupInterval,
       required this.keepBackupDays,
       required this.useGoogleDrive,
+      required this.useBoldFont,
       required this.updatedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4838,6 +4859,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
     map['backup_interval'] = Variable<int>(backupInterval);
     map['keep_backup_days'] = Variable<int>(keepBackupDays);
     map['use_google_drive'] = Variable<bool>(useGoogleDrive);
+    map['use_bold_font'] = Variable<bool>(useBoldFont);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -4851,6 +4873,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       backupInterval: Value(backupInterval),
       keepBackupDays: Value(keepBackupDays),
       useGoogleDrive: Value(useGoogleDrive),
+      useBoldFont: Value(useBoldFont),
       updatedAt: Value(updatedAt),
     );
   }
@@ -4866,6 +4889,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       backupInterval: serializer.fromJson<int>(json['backupInterval']),
       keepBackupDays: serializer.fromJson<int>(json['keepBackupDays']),
       useGoogleDrive: serializer.fromJson<bool>(json['useGoogleDrive']),
+      useBoldFont: serializer.fromJson<bool>(json['useBoldFont']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -4880,6 +4904,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       'backupInterval': serializer.toJson<int>(backupInterval),
       'keepBackupDays': serializer.toJson<int>(keepBackupDays),
       'useGoogleDrive': serializer.toJson<bool>(useGoogleDrive),
+      'useBoldFont': serializer.toJson<bool>(useBoldFont),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -4892,6 +4917,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
           int? backupInterval,
           int? keepBackupDays,
           bool? useGoogleDrive,
+          bool? useBoldFont,
           DateTime? updatedAt}) =>
       AppSettingData(
         id: id ?? this.id,
@@ -4901,6 +4927,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
         backupInterval: backupInterval ?? this.backupInterval,
         keepBackupDays: keepBackupDays ?? this.keepBackupDays,
         useGoogleDrive: useGoogleDrive ?? this.useGoogleDrive,
+        useBoldFont: useBoldFont ?? this.useBoldFont,
         updatedAt: updatedAt ?? this.updatedAt,
       );
   AppSettingData copyWithCompanion(AppSettingsCompanion data) {
@@ -4919,6 +4946,8 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       useGoogleDrive: data.useGoogleDrive.present
           ? data.useGoogleDrive.value
           : this.useGoogleDrive,
+      useBoldFont:
+          data.useBoldFont.present ? data.useBoldFont.value : this.useBoldFont,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -4933,6 +4962,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
           ..write('backupInterval: $backupInterval, ')
           ..write('keepBackupDays: $keepBackupDays, ')
           ..write('useGoogleDrive: $useGoogleDrive, ')
+          ..write('useBoldFont: $useBoldFont, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -4940,7 +4970,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
 
   @override
   int get hashCode => Object.hash(id, fontScale, theme, autoBackup,
-      backupInterval, keepBackupDays, useGoogleDrive, updatedAt);
+      backupInterval, keepBackupDays, useGoogleDrive, useBoldFont, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4952,6 +4982,7 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
           other.backupInterval == this.backupInterval &&
           other.keepBackupDays == this.keepBackupDays &&
           other.useGoogleDrive == this.useGoogleDrive &&
+          other.useBoldFont == this.useBoldFont &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -4963,6 +4994,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
   final Value<int> backupInterval;
   final Value<int> keepBackupDays;
   final Value<bool> useGoogleDrive;
+  final Value<bool> useBoldFont;
   final Value<DateTime> updatedAt;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
@@ -4972,6 +5004,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
     this.backupInterval = const Value.absent(),
     this.keepBackupDays = const Value.absent(),
     this.useGoogleDrive = const Value.absent(),
+    this.useBoldFont = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   AppSettingsCompanion.insert({
@@ -4982,6 +5015,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
     this.backupInterval = const Value.absent(),
     this.keepBackupDays = const Value.absent(),
     this.useGoogleDrive = const Value.absent(),
+    this.useBoldFont = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   static Insertable<AppSettingData> custom({
@@ -4992,6 +5026,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
     Expression<int>? backupInterval,
     Expression<int>? keepBackupDays,
     Expression<bool>? useGoogleDrive,
+    Expression<bool>? useBoldFont,
     Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
@@ -5002,6 +5037,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
       if (backupInterval != null) 'backup_interval': backupInterval,
       if (keepBackupDays != null) 'keep_backup_days': keepBackupDays,
       if (useGoogleDrive != null) 'use_google_drive': useGoogleDrive,
+      if (useBoldFont != null) 'use_bold_font': useBoldFont,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
@@ -5014,6 +5050,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
       Value<int>? backupInterval,
       Value<int>? keepBackupDays,
       Value<bool>? useGoogleDrive,
+      Value<bool>? useBoldFont,
       Value<DateTime>? updatedAt}) {
     return AppSettingsCompanion(
       id: id ?? this.id,
@@ -5023,6 +5060,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
       backupInterval: backupInterval ?? this.backupInterval,
       keepBackupDays: keepBackupDays ?? this.keepBackupDays,
       useGoogleDrive: useGoogleDrive ?? this.useGoogleDrive,
+      useBoldFont: useBoldFont ?? this.useBoldFont,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -5051,6 +5089,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
     if (useGoogleDrive.present) {
       map['use_google_drive'] = Variable<bool>(useGoogleDrive.value);
     }
+    if (useBoldFont.present) {
+      map['use_bold_font'] = Variable<bool>(useBoldFont.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -5067,6 +5108,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
           ..write('backupInterval: $backupInterval, ')
           ..write('keepBackupDays: $keepBackupDays, ')
           ..write('useGoogleDrive: $useGoogleDrive, ')
+          ..write('useBoldFont: $useBoldFont, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -10452,6 +10494,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder = AppSettingsCompanion
   Value<int> backupInterval,
   Value<int> keepBackupDays,
   Value<bool> useGoogleDrive,
+  Value<bool> useBoldFont,
   Value<DateTime> updatedAt,
 });
 typedef $$AppSettingsTableUpdateCompanionBuilder = AppSettingsCompanion
@@ -10463,6 +10506,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder = AppSettingsCompanion
   Value<int> backupInterval,
   Value<int> keepBackupDays,
   Value<bool> useGoogleDrive,
+  Value<bool> useBoldFont,
   Value<DateTime> updatedAt,
 });
 
@@ -10498,6 +10542,9 @@ class $$AppSettingsTableFilterComposer
   ColumnFilters<bool> get useGoogleDrive => $composableBuilder(
       column: $table.useGoogleDrive,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get useBoldFont => $composableBuilder(
+      column: $table.useBoldFont, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
@@ -10536,6 +10583,9 @@ class $$AppSettingsTableOrderingComposer
       column: $table.useGoogleDrive,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get useBoldFont => $composableBuilder(
+      column: $table.useBoldFont, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 }
@@ -10569,6 +10619,9 @@ class $$AppSettingsTableAnnotationComposer
 
   GeneratedColumn<bool> get useGoogleDrive => $composableBuilder(
       column: $table.useGoogleDrive, builder: (column) => column);
+
+  GeneratedColumn<bool> get useBoldFont => $composableBuilder(
+      column: $table.useBoldFont, builder: (column) => column);
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -10607,6 +10660,7 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             Value<int> backupInterval = const Value.absent(),
             Value<int> keepBackupDays = const Value.absent(),
             Value<bool> useGoogleDrive = const Value.absent(),
+            Value<bool> useBoldFont = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
               AppSettingsCompanion(
@@ -10617,6 +10671,7 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             backupInterval: backupInterval,
             keepBackupDays: keepBackupDays,
             useGoogleDrive: useGoogleDrive,
+            useBoldFont: useBoldFont,
             updatedAt: updatedAt,
           ),
           createCompanionCallback: ({
@@ -10627,6 +10682,7 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             Value<int> backupInterval = const Value.absent(),
             Value<int> keepBackupDays = const Value.absent(),
             Value<bool> useGoogleDrive = const Value.absent(),
+            Value<bool> useBoldFont = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
           }) =>
               AppSettingsCompanion.insert(
@@ -10637,6 +10693,7 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             backupInterval: backupInterval,
             keepBackupDays: keepBackupDays,
             useGoogleDrive: useGoogleDrive,
+            useBoldFont: useBoldFont,
             updatedAt: updatedAt,
           ),
           withReferenceMapper: (p0) => p0

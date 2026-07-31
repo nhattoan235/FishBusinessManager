@@ -58,6 +58,22 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
+  Future<int> addCustomer(CustomerEntity customer) async {
+    if (kIsWeb) return 999; // Mock ID for web
+    final companion = CustomersCompanion(
+      uuid: Value(customer.uuid),
+      name: Value(customer.name),
+      phone: Value(customer.phone),
+      address: Value(customer.address),
+      note: Value(customer.note),
+      isActive: Value(customer.isActive),
+      createdAt: Value(customer.createdAt),
+      updatedAt: Value(DateTime.now()),
+    );
+    return await _dao.insertCustomer(companion);
+  }
+
+  @override
   Future<void> deleteCustomer(int id) async {
     if (kIsWeb) return;
     await _dao.softDeleteCustomer(id);

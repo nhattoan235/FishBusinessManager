@@ -79,12 +79,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 onSelectionChanged: (set) {
                   setState(() => _isIncome = set.first);
                 },
+                style: SegmentedButton.styleFrom(
+                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               TextFormField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Số tiền (đ)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Số tiền (đ)',
+                  labelStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                  border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 2)),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.5)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 2.5)),
+                ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 validator: (val) {
                   if (val == null || val.isEmpty) return 'Vui lòng nhập số tiền';
                   final num = double.tryParse(val);
@@ -95,7 +106,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               const SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<String>(
                 value: _type,
-                decoration: const InputDecoration(labelText: 'Loại giao dịch', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Loại giao dịch',
+                  labelStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                  border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 2)),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.5)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 2.5)),
+                ),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black),
                 items: types.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _type = val);
@@ -104,7 +122,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _descController,
-                decoration: const InputDecoration(labelText: 'Ghi chú (Tùy chọn)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Ghi chú (Tùy chọn)',
+                  labelStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                  border: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 2)),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 1.5)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black, width: 2.5)),
+                ),
+                style: const TextStyle(fontSize: 18),
               ),
               const SizedBox(height: AppSpacing.xl),
               ElevatedButton(

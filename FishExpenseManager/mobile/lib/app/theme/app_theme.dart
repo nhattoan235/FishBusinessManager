@@ -4,7 +4,21 @@ import 'app_spacing.dart';
 import 'app_typography.dart';
 
 abstract class AppTheme {
-  static ThemeData get lightTheme {
+  static ThemeData lightTheme({
+    double fontScale = 1.0,
+    bool useBoldFont = false,
+  }) {
+    // Helper function to scale font size and optionally bold it
+    TextStyle scaleStyle(TextStyle style) {
+      return style.copyWith(
+        fontSize: (style.fontSize ?? 14) * fontScale,
+        fontWeight: useBoldFont ? FontWeight.bold : style.fontWeight,
+      );
+    }
+
+    // Explicit bold for buttons
+    final buttonWeight = useBoldFont ? FontWeight.w900 : FontWeight.bold;
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
@@ -17,23 +31,24 @@ abstract class AppTheme {
       fontFamily: 'Roboto',
 
       // Typography
-      textTheme: const TextTheme(
-        headlineLarge: AppTypography.displayLarge,
-        headlineMedium: AppTypography.titleLarge,
-        titleMedium: AppTypography.titleMedium,
-        bodyLarge: AppTypography.bodyLarge,
-        bodyMedium: AppTypography.bodyMedium,
+      textTheme: TextTheme(
+        headlineLarge: scaleStyle(AppTypography.displayLarge),
+        headlineMedium: scaleStyle(AppTypography.titleLarge),
+        titleMedium: scaleStyle(AppTypography.titleMedium),
+        bodyLarge: scaleStyle(AppTypography.bodyLarge),
+        bodyMedium: scaleStyle(AppTypography.bodyMedium),
+        labelLarge: scaleStyle(const TextStyle(fontSize: 14)), // Buttons default
       ),
 
       // App Bar Theme
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
+          fontSize: 20 * fontScale,
+          fontWeight: buttonWeight,
           color: Colors.white,
         ),
       ),
@@ -55,13 +70,25 @@ abstract class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, AppSpacing.minTouchTarget),
-          textStyle: AppTypography.button,
+          textStyle: TextStyle(
+            fontSize: 16 * fontScale,
+            fontWeight: buttonWeight,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           padding: const EdgeInsets.symmetric(
             vertical: AppSpacing.sm,
             horizontal: AppSpacing.md,
+          ),
+        ),
+      ),
+      
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          textStyle: TextStyle(
+            fontSize: 14 * fontScale,
+            fontWeight: buttonWeight,
           ),
         ),
       ),
@@ -97,8 +124,8 @@ abstract class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.md),
           borderSide: const BorderSide(color: AppColors.expense),
         ),
-        labelStyle: AppTypography.bodyMedium,
-        hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 16),
+        labelStyle: scaleStyle(AppTypography.bodyMedium),
+        hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 16 * fontScale),
       ),
     );
   }

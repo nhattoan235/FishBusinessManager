@@ -9,7 +9,14 @@ abstract class CurrencyFormatter {
 
   /// Định dạng số tiền thành chuỗi hiển thị. Ví dụ: 15200000 -> "15.200.000 đ"
   static String format(num amount) {
-    return _formatter.format(amount).trim();
+    // Ép buộc dùng dấu '.' làm phân cách hàng ngàn thay vì ','
+    String formatted = _formatter.format(amount).trim();
+    // Thay thế ',' thành '.' nếu locale vi_VN không được load đúng
+    // Nhưng vì symbol 'đ' có thể có, ta nên cẩn thận.
+    // Thực tế vi_VN mặc định dùng '.' cho hàng ngàn, 
+    // nhưng trên Web đôi khi bị lỗi fallback về ','.
+    formatted = formatted.replaceAll(',', '.');
+    return formatted;
   }
 
   /// Định dạng kèm dấu + hoặc -. Ví dụ: +2.500.000 đ, -800.000 đ

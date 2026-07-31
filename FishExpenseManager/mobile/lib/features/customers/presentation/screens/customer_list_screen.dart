@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/utils/string_utils.dart';
 import '../../application/customer_provider.dart';
 
 class CustomerListScreen extends ConsumerStatefulWidget {
@@ -36,7 +37,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               ),
-              onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+              onChanged: (val) => setState(() => _searchQuery = val.toLowerCase().withoutDiacritics),
             ),
           ),
           // Customer list
@@ -46,8 +47,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                 final filtered = _searchQuery.isEmpty
                     ? customers
                     : customers.where((c) =>
-                        c.name.toLowerCase().contains(_searchQuery) ||
-                        (c.phone?.toLowerCase().contains(_searchQuery) ?? false)
+                        c.name.toLowerCase().withoutDiacritics.contains(_searchQuery) ||
+                        (c.phone?.toLowerCase().withoutDiacritics.contains(_searchQuery) ?? false)
                       ).toList();
 
                 if (filtered.isEmpty) {
@@ -80,7 +81,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                       title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(c.phone ?? 'Không có SĐT'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.push('/customers/${c.id}'),
+                      onTap: () => Future.microtask(() => context.push('/customers/${c.id}')),
                     );
                   },
                 );
@@ -92,6 +93,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => context.push('/customers/add'),
         child: const Icon(Icons.person_add),
       ),

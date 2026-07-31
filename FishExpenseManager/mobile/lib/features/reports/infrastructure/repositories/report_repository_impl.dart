@@ -129,4 +129,58 @@ class ReportRepositoryImpl implements ReportRepository {
       );
     });
   }
+
+  @override
+  Future<Map<String, double>> getProfitSummary() async {
+    final now = DateTime.now();
+
+    // 1. Lãi trong tháng hiện tại
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    final resultMonth = await _db.customSelect(
+      '''
+      SELECT 
+        SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END) AS total_income,
+        SUM(CASE WHEN is_income = 0 THEN amount ELSE 0 END) AS total_expense
+      FROM transactions
+      WHERE date >= ? AND date <= ?
+      ''',
+      variables: [
+        Variable.withInt(startOfMonth.millisecondsSinceEpoch ~/ 1000),
+        Variable.withInt(endOfMonth.millisecondsSinceEpoch ~/ 1000)
+      ],
+    ).getSingleOrNull();
+
+    final mIncome = (resultMonth?.data['total_income'] as num?)?.toDouble() ?? 0.0;
+    final mExpense = (resultMonth?.data['total_expense'] as num?)?.toDouble() ?? 0.0;
+    final monthProfit = mIncome - mExpense;
+
+    // 2. Lãi trong quý (6 tháng qua) bao gồm cả tháng hiện tại
+    // Tính lùi 5 tháng + tháng này = 6 tháng
+    final startOfQuarter = DateTime(now.year, now.month - 5, 1);
+
+    final resultQuarter = await _db.customSelect(
+      '''
+      SELECT 
+        SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END) AS total_income,
+        SUM(CASE WHEN is_income = 0 THEN amount ELSE 0 END) AS total_expense
+      FROM transactions
+      WHERE date >= ? AND date <= ?
+      ''',
+      variables: [
+        Variable.withInt(startOfQuarter.millisecondsSinceEpoch ~/ 1000),
+        Variable.withInt(endOfMonth.millisecondsSinceEpoch ~/ 1000)
+      ],
+    ).getSingleOrNull();
+
+    final qIncome = (resultQuarter?.data['total_income'] as num?)?.toDouble() ?? 0.0;
+    final qExpense = (resultQuarter?.data['total_expense'] as num?)?.toDouble() ?? 0.0;
+    final quarterProfit = qIncome - qExpense;
+
+    return {
+      'monthProfit': monthProfit,
+      'quarterProfit': quarterProfit,
+    };
+  }
 }

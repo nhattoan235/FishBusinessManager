@@ -79,6 +79,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => context.push('/transactions/add'),
         child: const Icon(Icons.add),
       ),
@@ -88,9 +89,10 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
   Widget _buildFilterChip(String label, String value) {
     final selected = _filterPeriod == value;
     return ChoiceChip(
-      label: Text(label, style: TextStyle(fontSize: 12, color: selected ? Colors.white : null)),
+      label: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: selected ? Colors.white : Colors.black87)),
       selected: selected,
       selectedColor: AppColors.primary,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       onSelected: (_) => setState(() => _filterPeriod = value),
     );
   }

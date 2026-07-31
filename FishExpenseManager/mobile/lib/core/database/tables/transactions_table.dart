@@ -1,14 +1,14 @@
 import 'package:drift/drift.dart';
-import 'sale_documents_table.dart';
 
 @DataClassName('TransactionData')
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get uuid => text()();
-  TextColumn get transactionType => text()(); // income / expense / collect_debt / other
+  TextColumn get type => text()(); // income / expense / collect_debt / other
+  BoolColumn get isIncome => boolean().withDefault(const Constant(true))();
   IntColumn get amount => integer()();
   TextColumn get description => text().nullable()();
-  IntColumn get saleDocumentId => integer().nullable().references(SaleDocuments, #id)();
-  DateTimeColumn get transactionDate => dateTime()();
+  TextColumn get referenceId => text().nullable()();
+  DateTimeColumn get date => dateTime()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

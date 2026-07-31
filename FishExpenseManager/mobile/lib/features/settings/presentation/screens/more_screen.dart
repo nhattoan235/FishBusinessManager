@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -8,28 +9,32 @@ class MoreScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Chức năng khác')),
       body: ListView(
-        children: const [
-          ListTile(
+        children: [
+          const ListTile(
             leading: Icon(Icons.inventory_2),
             title: Text('Kho hàng'),
             subtitle: Text('Giai đoạn 3'),
           ),
-          ListTile(
+          const ListTile(
             leading: Icon(Icons.category),
             title: Text('Sản phẩm & Đơn vị'),
             subtitle: Text('Giai đoạn 3'),
           ),
           ListTile(
-            leading: Icon(Icons.people),
-            title: Text('Khách hàng & Người bán'),
-            subtitle: Text('Giai đoạn 2 & 3'),
+            leading: const Icon(Icons.people),
+            title: const Text('Khách hàng'),
+            subtitle: const Text('Quản lý thông tin khách hàng'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              context.push('/customers');
+            },
           ),
-          ListTile(
+          const ListTile(
             leading: Icon(Icons.backup),
             title: Text('Sao lưu & Khôi phục'),
             subtitle: Text('Giai đoạn 3'),
           ),
-          ListTile(
+          const ListTile(
             leading: Icon(Icons.settings),
             title: Text('Cài đặt'),
             subtitle: Text('Giai đoạn 3'),

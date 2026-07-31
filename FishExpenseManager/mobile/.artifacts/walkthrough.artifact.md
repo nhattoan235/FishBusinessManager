@@ -1,41 +1,33 @@
-# Walkthrough - Đã sửa lỗi Build và Theme
+# Walkthrough - Đã sửa lỗi kiến trúc và nghiệp vụ
 
-Tôi đã sửa các lỗi biên dịch (compilation errors) ngăn cản ứng dụng khởi chạy. Logic nghiệp vụ và cấu trúc dự án của bạn vẫn được giữ nguyên.
+Tôi đã sửa toàn bộ các lỗi biên dịch và logic phát sinh do việc triển khai kiến trúc Clean Architecture không đầy đủ trước đó. Các màn hình Trang chủ (Dashboard) và Thu chi (Transactions) hiện đã hoạt động bình thường.
 
 ## Các thay đổi chính
 
-### 1. Sửa lỗi Theme (lib/app/theme/app_theme.dart)
-- **Lỗi**: Thuộc tính `cardTheme` trong `ThemeData` bị gán nhầm một `Widget` (`CardTheme`) thay vì `CardThemeData`.
-- **Khắc phục**: Đã chuyển sang `CardThemeData`.
-- **Cập nhật**: Loại bỏ thuộc tính `background` đã bị khai tử (deprecated) trong `ColorScheme` và thay bằng `surface` để tương thích với Flutter mới nhất.
+### 1. Đồng bộ hóa Schema Database ([transactions_table.dart](file:///D:/Canhan/Doan/FishBusinessManager/FishExpenseManager/mobile/lib/core/database/tables/transactions_table.dart))
+- Cập nhật bảng `Transactions` để khớp với `TransactionEntity`.
+- Đổi tên các trường (`transactionType` -> `type`, `transactionDate` -> `date`).
+- Thêm trường `isIncome` (để phân biệt thu/chi) và `referenceId`.
 
-### 2. Sửa lỗi Test (test/widget_test.dart)
-- **Lỗi**: File test mặc định tham chiếu sai tên package (`mobile`) và sai tên class App (`MyApp`).
-- **Khắc phục**: Cập nhật import chính xác (`fish_business_manager`) và sử dụng class `FishBusinessApp`.
+### 2. Sửa lỗi giao diện và Theme
+- **[app_colors.dart](file:///D:/Canhan/Doan/FishBusinessManager/FishExpenseManager/mobile/lib/app/theme/app_colors.dart)**: Thêm các bí danh `success` và `error` để khớp với mã nguồn UI.
+- **[dashboard_screen.dart](file:///D:/Canhan/Doan/FishBusinessManager/FishExpenseManager/mobile/lib/features/dashboard/presentation/screens/dashboard_screen.dart)**:
+    - Sửa tham số `color` thành `backgroundColor` trong `AppCard`.
+    - Thay thế `withOpacity` bằng `withValues(alpha: 0.1)` (phiên bản Flutter mới nhất).
 
-## Hướng dẫn cấu hình môi trường
+### 3. Sửa lỗi Import và Mapping
+- Sửa toàn bộ các lỗi đường dẫn import sai (`../` vs `../../`) trong các tầng Domain, Application và Presentation.
+- Cập nhật `TransactionRepositoryImpl` để ánh xạ chính xác dữ liệu từ Database sang Entity, bao gồm việc chuyển đổi `int` sang `double` cho số tiền.
 
-Dựa trên kết quả `flutter doctor`, bạn **CẦN** thực hiện các bước sau để có thể chạy trên Android:
-
-> [!IMPORTANT]
-> **Chấp nhận bản quyền Android**:
-> Mở terminal và chạy lệnh:
-> ```bash
-> flutter doctor --android-licenses
-> ```
-> Gõ `y` cho tất cả các câu hỏi.
-
-> [!WARNING]
-> **Cài đặt Command-line Tools**:
-> 1. Mở **Android Studio**.
-> 2. Vào **Settings** (hoặc Settings > Languages & Frameworks > Android SDK).
-> 3. Chọn tab **SDK Tools**.
-> 4. Tích chọn **Android SDK Command-line Tools (latest)** và nhấn **Apply**.
+### 4. Cập nhật mã nguồn tự động
+- Đã chạy `build_runner` để cập nhật lại file `app_database.g.dart` và các file DAO, đảm bảo database hoạt động chính xác với cấu trúc mới.
 
 ---
 
-Bây giờ bạn có thể thử chạy ứng dụng bằng lệnh:
+> [!NOTE]
+> Ứng dụng hiện đã vượt qua kiểm tra của `flutter analyze` (chỉ còn lại 2 cảnh báo về code chưa dùng tới trong tầng Infrastructure, điều này là bình thường vì các truy cập database phức tạp sẽ được hoàn thiện ở bước tiếp theo).
+
+Bạn có thể chạy ứng dụng ngay bây giờ bằng lệnh:
 ```bash
 flutter run
 ```
-Hoặc nhấn nút **Run** trong Android Studio.

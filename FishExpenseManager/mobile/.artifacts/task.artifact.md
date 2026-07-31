@@ -1,4 +1,12 @@
-- `[x]` Fix compilation error in `lib/app/theme/app_theme.dart`
-- `[x]` Fix compilation errors in `test/widget_test.dart`
-- `[/]` Verify fixes with `flutter analyze`
-- `[ ]` Provide environment setup instructions
+- `[x]` Fix Core & Theming errors
+    - `[x]` Add success/error aliases to `app_colors.dart`
+    - `[x]` Update `transactions_table.dart` schema
+- `[x]` Fix Feature: Dashboard errors
+    - `[x]` Fix imports in `dashboard_repository.dart`
+    - `[x]` Fix imports and UI code in `dashboard_screen.dart`
+- `[x]` Fix Feature: Transactions errors
+    - `[x]` Fix imports in `transaction_repository.dart`
+    - `[x]` Fix mapping in `transaction_repository_impl.dart`
+    - `[x]` Fix imports and UI code in `transaction_list_screen.dart`
+- `[x]` Regenerate database code
+- `[x]` Final verification with `flutter analyze`

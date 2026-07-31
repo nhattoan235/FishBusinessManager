@@ -18,28 +18,51 @@ import 'tables/backup_logs_table.dart';
 import 'tables/app_logs_table.dart';
 import 'tables/database_info_table.dart';
 
+import 'dao/customer_dao.dart';
+import 'dao/supplier_dao.dart';
+import 'dao/product_dao.dart';
+import 'dao/sale_dao.dart';
+import 'dao/transaction_dao.dart';
+import 'dao/inventory_dao.dart';
+import 'dao/debt_dao.dart';
+import 'dao/settings_dao.dart';
+
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [
-  Customers,
-  Suppliers,
-  ProductCategories,
-  Units,
-  Products,
-  SaleDocuments,
-  SaleItems,
-  InventoryEntries,
-  Transactions,
-  CustomerBalances,
-  DebtTransactions,
-  AppSettings,
-  BackupLogs,
-  AppLogs,
-  DatabaseInfo,
-])
+@DriftDatabase(
+  tables: [
+    Customers,
+    Suppliers,
+    ProductCategories,
+    Units,
+    Products,
+    SaleDocuments,
+    SaleItems,
+    InventoryEntries,
+    Transactions,
+    CustomerBalances,
+    DebtTransactions,
+    AppSettings,
+    BackupLogs,
+    AppLogs,
+    DatabaseInfo,
+  ],
+  daos: [
+    CustomerDao,
+    SupplierDao,
+    ProductDao,
+    SaleDao,
+    TransactionDao,
+    InventoryDao,
+    DebtDao,
+    SettingsDao,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e])
-      : super(e ?? driftDatabase(name: 'fish_business_manager_db'));
+      : super(e ?? driftDatabase(
+          name: 'fish_business_manager_db',
+        ));
 
   @override
   int get schemaVersion => 1;

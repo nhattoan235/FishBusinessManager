@@ -3583,12 +3583,21 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
       'uuid', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _transactionTypeMeta =
-      const VerificationMeta('transactionType');
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
-  late final GeneratedColumn<String> transactionType = GeneratedColumn<String>(
-      'transaction_type', aliasedName, false,
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _isIncomeMeta =
+      const VerificationMeta('isIncome');
+  @override
+  late final GeneratedColumn<bool> isIncome = GeneratedColumn<bool>(
+      'is_income', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_income" IN (0, 1))'),
+      defaultValue: const Constant(true));
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<int> amount = GeneratedColumn<int>(
@@ -3600,21 +3609,17 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
       'description', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _saleDocumentIdMeta =
-      const VerificationMeta('saleDocumentId');
+  static const VerificationMeta _referenceIdMeta =
+      const VerificationMeta('referenceId');
   @override
-  late final GeneratedColumn<int> saleDocumentId = GeneratedColumn<int>(
-      'sale_document_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES sale_documents (id)'));
-  static const VerificationMeta _transactionDateMeta =
-      const VerificationMeta('transactionDate');
+  late final GeneratedColumn<String> referenceId = GeneratedColumn<String>(
+      'reference_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
-  late final GeneratedColumn<DateTime> transactionDate =
-      GeneratedColumn<DateTime>('transaction_date', aliasedName, false,
-          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -3627,11 +3632,12 @@ class $TransactionsTable extends Transactions
   List<GeneratedColumn> get $columns => [
         id,
         uuid,
-        transactionType,
+        type,
+        isIncome,
         amount,
         description,
-        saleDocumentId,
-        transactionDate,
+        referenceId,
+        date,
         createdAt
       ];
   @override
@@ -3653,13 +3659,15 @@ class $TransactionsTable extends Transactions
     } else if (isInserting) {
       context.missing(_uuidMeta);
     }
-    if (data.containsKey('transaction_type')) {
+    if (data.containsKey('type')) {
       context.handle(
-          _transactionTypeMeta,
-          transactionType.isAcceptableOrUnknown(
-              data['transaction_type']!, _transactionTypeMeta));
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
     } else if (isInserting) {
-      context.missing(_transactionTypeMeta);
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('is_income')) {
+      context.handle(_isIncomeMeta,
+          isIncome.isAcceptableOrUnknown(data['is_income']!, _isIncomeMeta));
     }
     if (data.containsKey('amount')) {
       context.handle(_amountMeta,
@@ -3673,19 +3681,17 @@ class $TransactionsTable extends Transactions
           description.isAcceptableOrUnknown(
               data['description']!, _descriptionMeta));
     }
-    if (data.containsKey('sale_document_id')) {
+    if (data.containsKey('reference_id')) {
       context.handle(
-          _saleDocumentIdMeta,
-          saleDocumentId.isAcceptableOrUnknown(
-              data['sale_document_id']!, _saleDocumentIdMeta));
+          _referenceIdMeta,
+          referenceId.isAcceptableOrUnknown(
+              data['reference_id']!, _referenceIdMeta));
     }
-    if (data.containsKey('transaction_date')) {
+    if (data.containsKey('date')) {
       context.handle(
-          _transactionDateMeta,
-          transactionDate.isAcceptableOrUnknown(
-              data['transaction_date']!, _transactionDateMeta));
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
     } else if (isInserting) {
-      context.missing(_transactionDateMeta);
+      context.missing(_dateMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -3704,16 +3710,18 @@ class $TransactionsTable extends Transactions
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       uuid: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
-      transactionType: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}transaction_type'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      isIncome: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_income'])!,
       amount: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}amount'])!,
       description: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}description']),
-      saleDocumentId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sale_document_id']),
-      transactionDate: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}transaction_date'])!,
+      referenceId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reference_id']),
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -3728,35 +3736,38 @@ class $TransactionsTable extends Transactions
 class TransactionData extends DataClass implements Insertable<TransactionData> {
   final int id;
   final String uuid;
-  final String transactionType;
+  final String type;
+  final bool isIncome;
   final int amount;
   final String? description;
-  final int? saleDocumentId;
-  final DateTime transactionDate;
+  final String? referenceId;
+  final DateTime date;
   final DateTime createdAt;
   const TransactionData(
       {required this.id,
       required this.uuid,
-      required this.transactionType,
+      required this.type,
+      required this.isIncome,
       required this.amount,
       this.description,
-      this.saleDocumentId,
-      required this.transactionDate,
+      this.referenceId,
+      required this.date,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['uuid'] = Variable<String>(uuid);
-    map['transaction_type'] = Variable<String>(transactionType);
+    map['type'] = Variable<String>(type);
+    map['is_income'] = Variable<bool>(isIncome);
     map['amount'] = Variable<int>(amount);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
     }
-    if (!nullToAbsent || saleDocumentId != null) {
-      map['sale_document_id'] = Variable<int>(saleDocumentId);
+    if (!nullToAbsent || referenceId != null) {
+      map['reference_id'] = Variable<String>(referenceId);
     }
-    map['transaction_date'] = Variable<DateTime>(transactionDate);
+    map['date'] = Variable<DateTime>(date);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -3765,15 +3776,16 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     return TransactionsCompanion(
       id: Value(id),
       uuid: Value(uuid),
-      transactionType: Value(transactionType),
+      type: Value(type),
+      isIncome: Value(isIncome),
       amount: Value(amount),
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
-      saleDocumentId: saleDocumentId == null && nullToAbsent
+      referenceId: referenceId == null && nullToAbsent
           ? const Value.absent()
-          : Value(saleDocumentId),
-      transactionDate: Value(transactionDate),
+          : Value(referenceId),
+      date: Value(date),
       createdAt: Value(createdAt),
     );
   }
@@ -3784,11 +3796,12 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     return TransactionData(
       id: serializer.fromJson<int>(json['id']),
       uuid: serializer.fromJson<String>(json['uuid']),
-      transactionType: serializer.fromJson<String>(json['transactionType']),
+      type: serializer.fromJson<String>(json['type']),
+      isIncome: serializer.fromJson<bool>(json['isIncome']),
       amount: serializer.fromJson<int>(json['amount']),
       description: serializer.fromJson<String?>(json['description']),
-      saleDocumentId: serializer.fromJson<int?>(json['saleDocumentId']),
-      transactionDate: serializer.fromJson<DateTime>(json['transactionDate']),
+      referenceId: serializer.fromJson<String?>(json['referenceId']),
+      date: serializer.fromJson<DateTime>(json['date']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -3798,11 +3811,12 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'uuid': serializer.toJson<String>(uuid),
-      'transactionType': serializer.toJson<String>(transactionType),
+      'type': serializer.toJson<String>(type),
+      'isIncome': serializer.toJson<bool>(isIncome),
       'amount': serializer.toJson<int>(amount),
       'description': serializer.toJson<String?>(description),
-      'saleDocumentId': serializer.toJson<int?>(saleDocumentId),
-      'transactionDate': serializer.toJson<DateTime>(transactionDate),
+      'referenceId': serializer.toJson<String?>(referenceId),
+      'date': serializer.toJson<DateTime>(date),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -3810,39 +3824,36 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
   TransactionData copyWith(
           {int? id,
           String? uuid,
-          String? transactionType,
+          String? type,
+          bool? isIncome,
           int? amount,
           Value<String?> description = const Value.absent(),
-          Value<int?> saleDocumentId = const Value.absent(),
-          DateTime? transactionDate,
+          Value<String?> referenceId = const Value.absent(),
+          DateTime? date,
           DateTime? createdAt}) =>
       TransactionData(
         id: id ?? this.id,
         uuid: uuid ?? this.uuid,
-        transactionType: transactionType ?? this.transactionType,
+        type: type ?? this.type,
+        isIncome: isIncome ?? this.isIncome,
         amount: amount ?? this.amount,
         description: description.present ? description.value : this.description,
-        saleDocumentId:
-            saleDocumentId.present ? saleDocumentId.value : this.saleDocumentId,
-        transactionDate: transactionDate ?? this.transactionDate,
+        referenceId: referenceId.present ? referenceId.value : this.referenceId,
+        date: date ?? this.date,
         createdAt: createdAt ?? this.createdAt,
       );
   TransactionData copyWithCompanion(TransactionsCompanion data) {
     return TransactionData(
       id: data.id.present ? data.id.value : this.id,
       uuid: data.uuid.present ? data.uuid.value : this.uuid,
-      transactionType: data.transactionType.present
-          ? data.transactionType.value
-          : this.transactionType,
+      type: data.type.present ? data.type.value : this.type,
+      isIncome: data.isIncome.present ? data.isIncome.value : this.isIncome,
       amount: data.amount.present ? data.amount.value : this.amount,
       description:
           data.description.present ? data.description.value : this.description,
-      saleDocumentId: data.saleDocumentId.present
-          ? data.saleDocumentId.value
-          : this.saleDocumentId,
-      transactionDate: data.transactionDate.present
-          ? data.transactionDate.value
-          : this.transactionDate,
+      referenceId:
+          data.referenceId.present ? data.referenceId.value : this.referenceId,
+      date: data.date.present ? data.date.value : this.date,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -3852,83 +3863,90 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     return (StringBuffer('TransactionData(')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
-          ..write('transactionType: $transactionType, ')
+          ..write('type: $type, ')
+          ..write('isIncome: $isIncome, ')
           ..write('amount: $amount, ')
           ..write('description: $description, ')
-          ..write('saleDocumentId: $saleDocumentId, ')
-          ..write('transactionDate: $transactionDate, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('date: $date, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, uuid, transactionType, amount,
-      description, saleDocumentId, transactionDate, createdAt);
+  int get hashCode => Object.hash(id, uuid, type, isIncome, amount, description,
+      referenceId, date, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TransactionData &&
           other.id == this.id &&
           other.uuid == this.uuid &&
-          other.transactionType == this.transactionType &&
+          other.type == this.type &&
+          other.isIncome == this.isIncome &&
           other.amount == this.amount &&
           other.description == this.description &&
-          other.saleDocumentId == this.saleDocumentId &&
-          other.transactionDate == this.transactionDate &&
+          other.referenceId == this.referenceId &&
+          other.date == this.date &&
           other.createdAt == this.createdAt);
 }
 
 class TransactionsCompanion extends UpdateCompanion<TransactionData> {
   final Value<int> id;
   final Value<String> uuid;
-  final Value<String> transactionType;
+  final Value<String> type;
+  final Value<bool> isIncome;
   final Value<int> amount;
   final Value<String?> description;
-  final Value<int?> saleDocumentId;
-  final Value<DateTime> transactionDate;
+  final Value<String?> referenceId;
+  final Value<DateTime> date;
   final Value<DateTime> createdAt;
   const TransactionsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
-    this.transactionType = const Value.absent(),
+    this.type = const Value.absent(),
+    this.isIncome = const Value.absent(),
     this.amount = const Value.absent(),
     this.description = const Value.absent(),
-    this.saleDocumentId = const Value.absent(),
-    this.transactionDate = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.date = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   TransactionsCompanion.insert({
     this.id = const Value.absent(),
     required String uuid,
-    required String transactionType,
+    required String type,
+    this.isIncome = const Value.absent(),
     required int amount,
     this.description = const Value.absent(),
-    this.saleDocumentId = const Value.absent(),
-    required DateTime transactionDate,
+    this.referenceId = const Value.absent(),
+    required DateTime date,
     this.createdAt = const Value.absent(),
   })  : uuid = Value(uuid),
-        transactionType = Value(transactionType),
+        type = Value(type),
         amount = Value(amount),
-        transactionDate = Value(transactionDate);
+        date = Value(date);
   static Insertable<TransactionData> custom({
     Expression<int>? id,
     Expression<String>? uuid,
-    Expression<String>? transactionType,
+    Expression<String>? type,
+    Expression<bool>? isIncome,
     Expression<int>? amount,
     Expression<String>? description,
-    Expression<int>? saleDocumentId,
-    Expression<DateTime>? transactionDate,
+    Expression<String>? referenceId,
+    Expression<DateTime>? date,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (uuid != null) 'uuid': uuid,
-      if (transactionType != null) 'transaction_type': transactionType,
+      if (type != null) 'type': type,
+      if (isIncome != null) 'is_income': isIncome,
       if (amount != null) 'amount': amount,
       if (description != null) 'description': description,
-      if (saleDocumentId != null) 'sale_document_id': saleDocumentId,
-      if (transactionDate != null) 'transaction_date': transactionDate,
+      if (referenceId != null) 'reference_id': referenceId,
+      if (date != null) 'date': date,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -3936,20 +3954,22 @@ class TransactionsCompanion extends UpdateCompanion<TransactionData> {
   TransactionsCompanion copyWith(
       {Value<int>? id,
       Value<String>? uuid,
-      Value<String>? transactionType,
+      Value<String>? type,
+      Value<bool>? isIncome,
       Value<int>? amount,
       Value<String?>? description,
-      Value<int?>? saleDocumentId,
-      Value<DateTime>? transactionDate,
+      Value<String?>? referenceId,
+      Value<DateTime>? date,
       Value<DateTime>? createdAt}) {
     return TransactionsCompanion(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
-      transactionType: transactionType ?? this.transactionType,
+      type: type ?? this.type,
+      isIncome: isIncome ?? this.isIncome,
       amount: amount ?? this.amount,
       description: description ?? this.description,
-      saleDocumentId: saleDocumentId ?? this.saleDocumentId,
-      transactionDate: transactionDate ?? this.transactionDate,
+      referenceId: referenceId ?? this.referenceId,
+      date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -3963,8 +3983,11 @@ class TransactionsCompanion extends UpdateCompanion<TransactionData> {
     if (uuid.present) {
       map['uuid'] = Variable<String>(uuid.value);
     }
-    if (transactionType.present) {
-      map['transaction_type'] = Variable<String>(transactionType.value);
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (isIncome.present) {
+      map['is_income'] = Variable<bool>(isIncome.value);
     }
     if (amount.present) {
       map['amount'] = Variable<int>(amount.value);
@@ -3972,11 +3995,11 @@ class TransactionsCompanion extends UpdateCompanion<TransactionData> {
     if (description.present) {
       map['description'] = Variable<String>(description.value);
     }
-    if (saleDocumentId.present) {
-      map['sale_document_id'] = Variable<int>(saleDocumentId.value);
+    if (referenceId.present) {
+      map['reference_id'] = Variable<String>(referenceId.value);
     }
-    if (transactionDate.present) {
-      map['transaction_date'] = Variable<DateTime>(transactionDate.value);
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -3989,11 +4012,12 @@ class TransactionsCompanion extends UpdateCompanion<TransactionData> {
     return (StringBuffer('TransactionsCompanion(')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
-          ..write('transactionType: $transactionType, ')
+          ..write('type: $type, ')
+          ..write('isIncome: $isIncome, ')
           ..write('amount: $amount, ')
           ..write('description: $description, ')
-          ..write('saleDocumentId: $saleDocumentId, ')
-          ..write('transactionDate: $transactionDate, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('date: $date, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -6182,6 +6206,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BackupLogsTable backupLogs = $BackupLogsTable(this);
   late final $AppLogsTable appLogs = $AppLogsTable(this);
   late final $DatabaseInfoTable databaseInfo = $DatabaseInfoTable(this);
+  late final CustomerDao customerDao = CustomerDao(this as AppDatabase);
+  late final SupplierDao supplierDao = SupplierDao(this as AppDatabase);
+  late final ProductDao productDao = ProductDao(this as AppDatabase);
+  late final SaleDao saleDao = SaleDao(this as AppDatabase);
+  late final TransactionDao transactionDao =
+      TransactionDao(this as AppDatabase);
+  late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
+  late final DebtDao debtDao = DebtDao(this as AppDatabase);
+  late final SettingsDao settingsDao = SettingsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8189,21 +8222,6 @@ final class $$SaleDocumentsTableReferences extends BaseReferences<_$AppDatabase,
         manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<$TransactionsTable, List<TransactionData>>
-      _transactionsRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.transactions,
-              aliasName: $_aliasNameGenerator(
-                  db.saleDocuments.id, db.transactions.saleDocumentId));
-
-  $$TransactionsTableProcessedTableManager get transactionsRefs {
-    final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
-        .filter((f) => f.saleDocumentId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-
   static MultiTypedResultKey<$DebtTransactionsTable, List<DebtTransactionData>>
       _debtTransactionsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.debtTransactions,
@@ -8315,27 +8333,6 @@ class $$SaleDocumentsTableFilterComposer
             $$InventoryEntriesTableFilterComposer(
               $db: $db,
               $table: $db.inventoryEntries,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
-  Expression<bool> transactionsRefs(
-      Expression<bool> Function($$TransactionsTableFilterComposer f) f) {
-    final $$TransactionsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.saleDocumentId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionsTableFilterComposer(
-              $db: $db,
-              $table: $db.transactions,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -8527,27 +8524,6 @@ class $$SaleDocumentsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> transactionsRefs<T extends Object>(
-      Expression<T> Function($$TransactionsTableAnnotationComposer a) f) {
-    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.saleDocumentId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$TransactionsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.transactions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
   Expression<T> debtTransactionsRefs<T extends Object>(
       Expression<T> Function($$DebtTransactionsTableAnnotationComposer a) f) {
     final $$DebtTransactionsTableAnnotationComposer composer = $composerBuilder(
@@ -8585,7 +8561,6 @@ class $$SaleDocumentsTableTableManager extends RootTableManager<
         {bool customerId,
         bool saleItemsRefs,
         bool inventoryEntriesRefs,
-        bool transactionsRefs,
         bool debtTransactionsRefs})> {
   $$SaleDocumentsTableTableManager(_$AppDatabase db, $SaleDocumentsTable table)
       : super(TableManagerState(
@@ -8659,14 +8634,12 @@ class $$SaleDocumentsTableTableManager extends RootTableManager<
               {customerId = false,
               saleItemsRefs = false,
               inventoryEntriesRefs = false,
-              transactionsRefs = false,
               debtTransactionsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (saleItemsRefs) db.saleItems,
                 if (inventoryEntriesRefs) db.inventoryEntries,
-                if (transactionsRefs) db.transactions,
                 if (debtTransactionsRefs) db.debtTransactions
               ],
               addJoins: <
@@ -8723,19 +8696,6 @@ class $$SaleDocumentsTableTableManager extends RootTableManager<
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.saleDocumentId == item.id),
                         typedResults: items),
-                  if (transactionsRefs)
-                    await $_getPrefetchedData<SaleDocumentData,
-                            $SaleDocumentsTable, TransactionData>(
-                        currentTable: table,
-                        referencedTable: $$SaleDocumentsTableReferences
-                            ._transactionsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$SaleDocumentsTableReferences(db, table, p0)
-                                .transactionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.saleDocumentId == item.id),
-                        typedResults: items),
                   if (debtTransactionsRefs)
                     await $_getPrefetchedData<SaleDocumentData,
                             $SaleDocumentsTable, DebtTransactionData>(
@@ -8771,7 +8731,6 @@ typedef $$SaleDocumentsTableProcessedTableManager = ProcessedTableManager<
         {bool customerId,
         bool saleItemsRefs,
         bool inventoryEntriesRefs,
-        bool transactionsRefs,
         bool debtTransactionsRefs})>;
 typedef $$SaleItemsTableCreateCompanionBuilder = SaleItemsCompanion Function({
   Value<int> id,
@@ -9639,44 +9598,26 @@ typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
     Function({
   Value<int> id,
   required String uuid,
-  required String transactionType,
+  required String type,
+  Value<bool> isIncome,
   required int amount,
   Value<String?> description,
-  Value<int?> saleDocumentId,
-  required DateTime transactionDate,
+  Value<String?> referenceId,
+  required DateTime date,
   Value<DateTime> createdAt,
 });
 typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
     Function({
   Value<int> id,
   Value<String> uuid,
-  Value<String> transactionType,
+  Value<String> type,
+  Value<bool> isIncome,
   Value<int> amount,
   Value<String?> description,
-  Value<int?> saleDocumentId,
-  Value<DateTime> transactionDate,
+  Value<String?> referenceId,
+  Value<DateTime> date,
   Value<DateTime> createdAt,
 });
-
-final class $$TransactionsTableReferences
-    extends BaseReferences<_$AppDatabase, $TransactionsTable, TransactionData> {
-  $$TransactionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $SaleDocumentsTable _saleDocumentIdTable(_$AppDatabase db) =>
-      db.saleDocuments.createAlias($_aliasNameGenerator(
-          db.transactions.saleDocumentId, db.saleDocuments.id));
-
-  $$SaleDocumentsTableProcessedTableManager? get saleDocumentId {
-    final $_column = $_itemColumn<int>('sale_document_id');
-    if ($_column == null) return null;
-    final manager = $$SaleDocumentsTableTableManager($_db, $_db.saleDocuments)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_saleDocumentIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-}
 
 class $$TransactionsTableFilterComposer
     extends Composer<_$AppDatabase, $TransactionsTable> {
@@ -9693,9 +9634,11 @@ class $$TransactionsTableFilterComposer
   ColumnFilters<String> get uuid => $composableBuilder(
       column: $table.uuid, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get transactionType => $composableBuilder(
-      column: $table.transactionType,
-      builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isIncome => $composableBuilder(
+      column: $table.isIncome, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
@@ -9703,32 +9646,14 @@ class $$TransactionsTableFilterComposer
   ColumnFilters<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get transactionDate => $composableBuilder(
-      column: $table.transactionDate,
-      builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get referenceId => $composableBuilder(
+      column: $table.referenceId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  $$SaleDocumentsTableFilterComposer get saleDocumentId {
-    final $$SaleDocumentsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.saleDocumentId,
-        referencedTable: $db.saleDocuments,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SaleDocumentsTableFilterComposer(
-              $db: $db,
-              $table: $db.saleDocuments,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 }
 
 class $$TransactionsTableOrderingComposer
@@ -9746,9 +9671,11 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<String> get uuid => $composableBuilder(
       column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get transactionType => $composableBuilder(
-      column: $table.transactionType,
-      builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isIncome => $composableBuilder(
+      column: $table.isIncome, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
@@ -9756,32 +9683,14 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get transactionDate => $composableBuilder(
-      column: $table.transactionDate,
-      builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get referenceId => $composableBuilder(
+      column: $table.referenceId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  $$SaleDocumentsTableOrderingComposer get saleDocumentId {
-    final $$SaleDocumentsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.saleDocumentId,
-        referencedTable: $db.saleDocuments,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SaleDocumentsTableOrderingComposer(
-              $db: $db,
-              $table: $db.saleDocuments,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -9799,8 +9708,11 @@ class $$TransactionsTableAnnotationComposer
   GeneratedColumn<String> get uuid =>
       $composableBuilder(column: $table.uuid, builder: (column) => column);
 
-  GeneratedColumn<String> get transactionType => $composableBuilder(
-      column: $table.transactionType, builder: (column) => column);
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<bool> get isIncome =>
+      $composableBuilder(column: $table.isIncome, builder: (column) => column);
 
   GeneratedColumn<int> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
@@ -9808,31 +9720,14 @@ class $$TransactionsTableAnnotationComposer
   GeneratedColumn<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get transactionDate => $composableBuilder(
-      column: $table.transactionDate, builder: (column) => column);
+  GeneratedColumn<String> get referenceId => $composableBuilder(
+      column: $table.referenceId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  $$SaleDocumentsTableAnnotationComposer get saleDocumentId {
-    final $$SaleDocumentsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.saleDocumentId,
-        referencedTable: $db.saleDocuments,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SaleDocumentsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.saleDocuments,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -9844,9 +9739,12 @@ class $$TransactionsTableTableManager extends RootTableManager<
     $$TransactionsTableAnnotationComposer,
     $$TransactionsTableCreateCompanionBuilder,
     $$TransactionsTableUpdateCompanionBuilder,
-    (TransactionData, $$TransactionsTableReferences),
+    (
+      TransactionData,
+      BaseReferences<_$AppDatabase, $TransactionsTable, TransactionData>
+    ),
     TransactionData,
-    PrefetchHooks Function({bool saleDocumentId})> {
+    PrefetchHooks Function()> {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
       : super(TableManagerState(
           db: db,
@@ -9860,85 +9758,51 @@ class $$TransactionsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<String> uuid = const Value.absent(),
-            Value<String> transactionType = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<bool> isIncome = const Value.absent(),
             Value<int> amount = const Value.absent(),
             Value<String?> description = const Value.absent(),
-            Value<int?> saleDocumentId = const Value.absent(),
-            Value<DateTime> transactionDate = const Value.absent(),
+            Value<String?> referenceId = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               TransactionsCompanion(
             id: id,
             uuid: uuid,
-            transactionType: transactionType,
+            type: type,
+            isIncome: isIncome,
             amount: amount,
             description: description,
-            saleDocumentId: saleDocumentId,
-            transactionDate: transactionDate,
+            referenceId: referenceId,
+            date: date,
             createdAt: createdAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String uuid,
-            required String transactionType,
+            required String type,
+            Value<bool> isIncome = const Value.absent(),
             required int amount,
             Value<String?> description = const Value.absent(),
-            Value<int?> saleDocumentId = const Value.absent(),
-            required DateTime transactionDate,
+            Value<String?> referenceId = const Value.absent(),
+            required DateTime date,
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               TransactionsCompanion.insert(
             id: id,
             uuid: uuid,
-            transactionType: transactionType,
+            type: type,
+            isIncome: isIncome,
             amount: amount,
             description: description,
-            saleDocumentId: saleDocumentId,
-            transactionDate: transactionDate,
+            referenceId: referenceId,
+            date: date,
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$TransactionsTableReferences(db, table, e)
-                  ))
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({saleDocumentId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (saleDocumentId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.saleDocumentId,
-                    referencedTable:
-                        $$TransactionsTableReferences._saleDocumentIdTable(db),
-                    referencedColumn: $$TransactionsTableReferences
-                        ._saleDocumentIdTable(db)
-                        .id,
-                  ) as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ));
 }
 
@@ -9951,9 +9815,12 @@ typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
     $$TransactionsTableAnnotationComposer,
     $$TransactionsTableCreateCompanionBuilder,
     $$TransactionsTableUpdateCompanionBuilder,
-    (TransactionData, $$TransactionsTableReferences),
+    (
+      TransactionData,
+      BaseReferences<_$AppDatabase, $TransactionsTable, TransactionData>
+    ),
     TransactionData,
-    PrefetchHooks Function({bool saleDocumentId})>;
+    PrefetchHooks Function()>;
 typedef $$CustomerBalancesTableCreateCompanionBuilder
     = CustomerBalancesCompanion Function({
   Value<int> customerId,

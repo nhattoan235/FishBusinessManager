@@ -12,8 +12,16 @@ class MonthlyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Only show months that have data OR all 12 months
-    final activeStats = stats.length > 12 ? stats.sublist(0, 12) : stats;
+    // Chỉ lấy 3 tháng gần nhất có dữ liệu (hoặc 3 tháng cuối nếu không có dữ liệu)
+    final monthsWithData = stats.where((s) => s.totalIncome > 0 || s.totalExpense > 0).toList();
+    List<MonthlyStatEntity> activeStats;
+    if (monthsWithData.isEmpty) {
+      activeStats = stats.length >= 3 ? stats.sublist(stats.length - 3) : stats;
+    } else {
+      activeStats = monthsWithData.length > 3 
+          ? monthsWithData.sublist(monthsWithData.length - 3) 
+          : monthsWithData;
+    }
 
     return BarChart(
       BarChartData(
@@ -28,19 +36,19 @@ class MonthlyBarChart extends StatelessWidget {
               BarChartRodData(
                 toY: stat.totalIncome,
                 color: AppColors.success,
-                width: 6,
+                width: 24, // Cột to hơn
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(3),
-                  topRight: Radius.circular(3),
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(4),
                 ),
               ),
               BarChartRodData(
                 toY: stat.totalExpense,
                 color: AppColors.error,
-                width: 6,
+                width: 24, // Cột to hơn
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(3),
-                  topRight: Radius.circular(3),
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(4),
                 ),
               ),
             ],
@@ -50,12 +58,19 @@ class MonthlyBarChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 44,
+              reservedSize: 50,
               getTitlesWidget: (value, meta) {
                 if (value == 0) return const SizedBox.shrink();
-                return Text(
-                  CurrencyFormatter.formatCompact(value),
-                  style: const TextStyle(fontSize: 9, color: AppColors.textSecondary),
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Text(
+                    CurrencyFormatter.formatCompact(value),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
                 );
               },
             ),
@@ -66,11 +81,12 @@ class MonthlyBarChart extends StatelessWidget {
               getTitlesWidget: (value, meta) {
                 final idx = value.toInt();
                 if (idx < 0 || idx >= activeStats.length) return const SizedBox.shrink();
+                final month = activeStats[idx].month;
                 return Padding(
-                  padding: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
-                    'T${activeStats[idx].month}',
-                    style: const TextStyle(fontSize: 9, color: AppColors.textSecondary),
+                    'Tháng $month',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                 );
               },

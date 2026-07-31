@@ -39,8 +39,19 @@ class SaleRepositoryImpl implements SaleRepository {
       )).toList();
       await _saleDao.insertSaleItems(saleItemCompanions);
 
-      // 3. Deduct inventory for each item
+      // 3. Deduct inventory for each item (and check BR-802)
       for (final item in sale.items) {
+        // Calculate current stock
+        final stockResult = await _db.customSelect(
+          'SELECT COALESCE(SUM(quantity), 0.0) AS stock FROM inventory_entries WHERE product_id = ?',
+          variables: [Variable.withInt(item.productId)],
+        ).getSingle();
+        final currentStock = stockResult.read<double>('stock');
+
+        if (currentStock < item.quantity) {
+          throw Exception('Tồn kho không đủ cho sản phẩm ID: ${item.productId}');
+        }
+
         await _db.inventoryDao.insertEntry(InventoryEntriesCompanion.insert(
           uuid: const Uuid().v4(),
           productId: item.productId,

@@ -65,7 +65,7 @@ class AppDatabase extends _$AppDatabase {
         ));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -74,7 +74,9 @@ class AppDatabase extends _$AppDatabase {
           await _seedData();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // Migration paths for future database schema updates
+          if (from == 1 && to == 2) {
+            await m.addColumn(appSettings, appSettings.useBoldFont);
+          }
         },
       );
 

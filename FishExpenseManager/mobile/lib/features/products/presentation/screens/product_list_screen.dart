@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/string_utils.dart';
 import '../../application/product_provider.dart';
 
 class ProductListScreen extends ConsumerStatefulWidget {
@@ -45,7 +46,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
               data: (products) {
                 final activeProducts = products.where((p) => p.isActive).toList();
                 final filteredProducts = activeProducts.where((p) {
-                  return p.name.toLowerCase().contains(_searchQuery.toLowerCase());
+                  return p.name.toLowerCase().withoutDiacritics.contains(_searchQuery.toLowerCase().withoutDiacritics);
                 }).toList();
 
                 if (filteredProducts.isEmpty) {
@@ -75,23 +76,13 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                               Text('Giá: ${CurrencyFormatter.format(product.defaultPrice!.toDouble())}'),
                           ],
                         ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              stock.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), ''),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: isLow ? AppColors.error : AppColors.success,
-                              ),
-                            ),
-                            Text(
-                              product.unit?.symbol ?? 'tồn',
-                              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                            ),
-                          ],
+                        trailing: Text(
+                          '${stock.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')} ${product.unit?.symbol ?? ''}'.trim(),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isLow ? AppColors.error : AppColors.success,
+                          ),
                         ),
                         isThreeLine: product.defaultPrice != null,
                         onTap: () => context.push('/products/${product.id}', extra: product),
@@ -107,6 +98,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => context.push('/products/add'),
         child: const Icon(Icons.add),
       ),

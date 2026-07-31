@@ -6,4 +6,7 @@ abstract class ReportRepository {
   
   /// Trả về thống kê theo từng ngày trong tháng [month] năm [year]
   Future<List<DailyStatEntity>> getDailyStats(int year, int month);
+
+  /// Trả về Lãi trong tháng hiện tại và quý (6 tháng)
+  Future<Map<String, double>> getProfitSummary();
 }

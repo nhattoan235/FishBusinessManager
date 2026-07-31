@@ -26,12 +26,10 @@ class DashboardScreen extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('Lỗi: $err')),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.go('/sales');
-        },
-        icon: const Icon(Icons.add_shopping_cart),
-        label: const Text('Bán Hàng'),
-        backgroundColor: AppColors.primary,
+        heroTag: null,
+        onPressed: () => context.go('/sales'),
+        icon: const Icon(Icons.point_of_sale),
+        label: const Text('Bán Hàng', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -96,11 +94,11 @@ class DashboardScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
-            const Text('Tiền hiện có', style: TextStyle(fontSize: 16, color: AppColors.textSecondary)),
+            const Text('Tiền hiện có', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
             const SizedBox(height: AppSpacing.xs),
             Text(
               CurrencyFormatter.format(amount),
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
             ),
           ],
         ),

@@ -9,6 +9,7 @@ class AppSettings extends Table {
   IntColumn get backupInterval => integer().withDefault(const Constant(24))();
   IntColumn get keepBackupDays => integer().withDefault(const Constant(30))();
   BoolColumn get useGoogleDrive => boolean().withDefault(const Constant(false))();
+  BoolColumn get useBoldFont => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override

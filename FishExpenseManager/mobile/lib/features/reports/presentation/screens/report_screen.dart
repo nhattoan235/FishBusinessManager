@@ -6,7 +6,7 @@ import '../../../../core/utils/currency_formatter.dart';
 import '../../application/report_provider.dart';
 import '../../domain/entities/report_entity.dart';
 import 'widgets/monthly_bar_chart.dart';
-import 'widgets/daily_line_chart.dart';
+import 'widgets/daily_bar_chart.dart';
 
 class ReportScreen extends ConsumerStatefulWidget {
   const ReportScreen({super.key});
@@ -22,7 +22,8 @@ class _ReportScreenState extends ConsumerState<ReportScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    // initialIndex: 1 => Tab Theo ngày
+    _tabController = TabController(length: 2, vsync: this, initialIndex: 1);
   }
 
   @override
@@ -41,9 +42,15 @@ class _ReportScreenState extends ConsumerState<ReportScreen>
         title: const Text('Báo cáo'),
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.yellow,
+          unselectedLabelColor: Colors.white,
+          labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontSize: 16),
+          indicatorColor: Colors.yellow,
+          indicatorWeight: 4,
           tabs: const [
-            Tab(text: 'Theo tháng', icon: Icon(Icons.bar_chart)),
-            Tab(text: 'Theo ngày', icon: Icon(Icons.show_chart)),
+            Tab(text: 'Theo tháng', icon: Icon(Icons.bar_chart, size: 28)),
+            Tab(text: 'Theo ngày',  icon: Icon(Icons.show_chart, size: 28)),
           ],
         ),
         actions: [
@@ -124,7 +131,7 @@ class _MonthlyTab extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
-              _ProfitCard(profit: profit),
+              const _ProfitSummaryCard(),
               const SizedBox(height: AppSpacing.lg),
 
               // Bar chart
@@ -147,11 +154,11 @@ class _MonthlyTab extends ConsumerWidget {
               // Monthly detail list
               const Text(
                 'Chi tiết từng tháng',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.sm),
               ...stats.where((s) => s.totalIncome > 0 || s.totalExpense > 0).map(
-                (s) => _MonthlyRow(stat: s),
+                (s) => _MonthlyRow(stat: s, year: year),
               ),
             ],
           ),
@@ -194,7 +201,7 @@ class _DailyTab extends ConsumerWidget {
               ),
               Expanded(
                 child: Text(
-                  _months[month],
+                  '${_months[month]} / $year',
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -237,16 +244,44 @@ class _DailyTab extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    
+                    const Text(
+                      'Biểu đồ Tổng Thu (7 ngày)',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         child: SizedBox(
                           height: 200,
-                          child: DailyLineChart(stats: stats),
+                          child: DailyBarChart(stats: stats, isIncome: true),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    
+                    const Text(
+                      'Biểu đồ Tổng Chi (7 ngày)',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: SizedBox(
+                          height: 200,
+                          child: DailyBarChart(stats: stats, isIncome: false),
                         ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
+                    
+                    const Text(
+                      'Chi tiết từng ngày',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
                     // Only show days with data
                     ...stats.where((d) => d.income > 0 || d.expense > 0).map(
                       (d) => _DailyRow(stat: d),
@@ -319,44 +354,84 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _ProfitCard extends StatelessWidget {
-  final double profit;
-  const _ProfitCard({required this.profit});
+class _ProfitSummaryCard extends ConsumerWidget {
+  const _ProfitSummaryCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summaryAsync = ref.watch(profitSummaryProvider);
+
+    return summaryAsync.when(
+      data: (summary) {
+        final mProfit = summary['monthProfit'] ?? 0;
+        final qProfit = summary['quarterProfit'] ?? 0;
+
+        return Card(
+          margin: EdgeInsets.zero,
+          elevation: 2,
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)], // Xanh lá sáng nhẹ
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildRow('Lãi trong tháng', mProfit),
+                  const Divider(color: Colors.white, height: 24),
+                  _buildRow('Lãi trong quý (6 tháng)', qProfit),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Text('Lỗi: $e'),
+    );
+  }
+
+  Widget _buildRow(String label, double profit) {
     final isProfit = profit >= 0;
     final color = isProfit ? AppColors.success : AppColors.error;
-    final label = isProfit ? 'Lãi trong năm' : 'Lỗ trong năm';
+    final icon = isProfit ? Icons.trending_up : Icons.trending_down;
 
-    return Card(
-      color: color.withAlpha(20),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
           children: [
-            Icon(isProfit ? Icons.trending_up : Icons.trending_down, color: color, size: 28),
-            const SizedBox(width: AppSpacing.md),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
-                Text(
-                  CurrencyFormatter.format(profit.abs()),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
-                ),
-              ],
+            Icon(icon, color: color, size: 24),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
             ),
           ],
         ),
-      ),
+        Text(
+          CurrencyFormatter.format(profit),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900, // Very bold
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _MonthlyRow extends StatelessWidget {
   final MonthlyStatEntity stat;
-  const _MonthlyRow({required this.stat});
+  final int year;
+  const _MonthlyRow({required this.stat, required this.year});
 
   static const _monthNames = [
     '', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
@@ -373,9 +448,9 @@ class _MonthlyRow extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_monthNames[stat.month],
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            const SizedBox(height: 6),
+            Text('${_monthNames[stat.month]} / $year',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary)),
+            const SizedBox(height: 8),
             Row(
               children: [
                 _StatChip(label: '↓ Thu', amount: stat.totalIncome, color: AppColors.success),
@@ -425,25 +500,32 @@ class _DailyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final weekdays = ['', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+    final weekdayStr = weekdays[stat.date.weekday];
+    final dateStr = '${stat.date.day.toString().padLeft(2, '0')}/${stat.date.month.toString().padLeft(2, '0')}/${stat.date.year}';
+
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: AppColors.primaryLight,
-          child: Text(
-            '${stat.date.day}',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
-          ),
-        ),
-        title: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            if (stat.income > 0)
-              Text('+ ${CurrencyFormatter.formatCompact(stat.income)}',
-                  style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600)),
-            if (stat.income > 0 && stat.expense > 0) const SizedBox(width: AppSpacing.sm),
-            if (stat.expense > 0)
-              Text('- ${CurrencyFormatter.formatCompact(stat.expense)}',
-                  style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
+            Text(
+              '$weekdayStr, $dateStr',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (stat.income > 0)
+                  Text('+ ${CurrencyFormatter.formatCompact(stat.income)}',
+                      style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 16)),
+                if (stat.expense > 0)
+                  Text('- ${CurrencyFormatter.formatCompact(stat.expense)}',
+                      style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 16)),
+              ],
+            ),
           ],
         ),
       ),

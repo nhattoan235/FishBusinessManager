@@ -27,3 +27,11 @@ final dailyStatsProvider = FutureProvider<List<DailyStatEntity>>((ref) {
   final month = ref.watch(selectedMonthProvider);
   return ref.watch(reportRepositoryProvider).getDailyStats(year, month);
 });
+
+/// Provider tổng kết Lãi tháng và quý
+final profitSummaryProvider = FutureProvider<Map<String, double>>((ref) {
+  // Watch year/month so it refreshes when user changes time, though it always computes from 'now' in repository.
+  // Actually, to make it react to transactions, we might need to invalidate it on sale. 
+  // For now, it's fetched once when screen opens.
+  return ref.watch(reportRepositoryProvider).getProfitSummary();
+});

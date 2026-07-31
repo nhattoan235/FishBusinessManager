@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/utils/string_utils.dart';
 import '../../../customers/application/customer_provider.dart';
+import '../../../customers/domain/entities/customer_entity.dart';
 import '../../../products/application/product_provider.dart';
 import '../../../products/domain/entities/product_entity.dart';
 import '../../application/sale_provider.dart';
@@ -23,6 +25,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   final _paidController = TextEditingController();
 
   int? _selectedCustomerId;
+  String _customerSearchText = '';
+  TextEditingController? _autocompleteController;
   ProductEntity? _selectedProduct;
 
   double get _totalAmount {
@@ -46,8 +50,42 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
 
   void _save() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    // Nếu chưa chọn ID mà có text, hỏi tạo mới
+    if (_selectedCustomerId == null && _customerSearchText.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Khách hàng mới'),
+          content: Text('"$_customerSearchText" chưa có trong hệ thống.\nBạn có muốn tạo khách hàng này không?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Không')),
+            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Đúng')),
+          ],
+        ),
+      );
+      if (confirm != true) return;
+      
+      try {
+        final newCustomer = CustomerEntity(
+          uuid: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: _customerSearchText,
+          phone: '',
+          address: '',
+          note: '',
+          createdAt: DateTime.now(),
+        );
+        final createdId = await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
+        setState(() => _selectedCustomerId = createdId);
+        // refresh list to get new customer (StreamProvider usually auto-updates, but just in case)
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tạo KH: $e')));
+        return;
+      }
+    }
+
     if (_selectedCustomerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn khách hàng')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn hoặc nhập khách hàng')));
       return;
     }
     if (_selectedProduct == null) {
@@ -105,6 +143,9 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
         _paidController.clear();
         setState(() {
           _selectedCustomerId = null;
+          _customerSearchText = '';
+          _selectedProduct = null;
+          _autocompleteController?.clear();
           // Refresh products to get updated stock
           ref.invalidate(productListProvider);
         });
@@ -148,16 +189,41 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               // Customer dropdown
               customersAsync.when(
                 data: (customers) {
-                  return DropdownButtonFormField<int>(
-                    value: _selectedCustomerId,
-                    decoration: const InputDecoration(
-                      labelText: 'Chọn Khách Hàng *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
-                    ),
-                    items: customers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
-                    onChanged: (val) => setState(() => _selectedCustomerId = val),
-                    validator: (val) => val == null ? 'Vui lòng chọn khách hàng' : null,
+                  return Autocomplete<CustomerEntity>(
+                    displayStringForOption: (c) => c.name,
+                    optionsBuilder: (textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return const Iterable<CustomerEntity>.empty();
+                      }
+                      final query = textEditingValue.text.toLowerCase().withoutDiacritics;
+                      return customers.where((c) => c.name.toLowerCase().withoutDiacritics.contains(query));
+                    },
+                    onSelected: (c) {
+                      setState(() {
+                        _selectedCustomerId = c.id;
+                        _customerSearchText = c.name;
+                      });
+                    },
+                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                      if (_autocompleteController != controller) {
+                        _autocompleteController = controller;
+                        controller.addListener(() {
+                          _customerSearchText = controller.text;
+                          final match = customers.where((c) => c.name.toLowerCase().withoutDiacritics == controller.text.toLowerCase().withoutDiacritics).firstOrNull;
+                          _selectedCustomerId = match?.id;
+                        });
+                      }
+                      return TextFormField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Khách Hàng (Tìm hoặc nhập mới) *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                        validator: (val) => val == null || val.isEmpty ? 'Vui lòng chọn hoặc nhập khách hàng' : null,
+                      );
+                    },
                   );
                 },
                 loading: () => const LinearProgressIndicator(),
@@ -181,37 +247,32 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                     );
                   }
 
-                  // If exactly 1 product, auto-select it and show as readonly
-                  if (activeProducts.length == 1) {
-                    final p = activeProducts.first;
-                    if (_selectedProduct == null) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        _onProductSelected(p);
-                      });
-                    }
-                    return InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Sản phẩm (mặc định)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.inventory_2),
-                      ),
-                      child: Text('${p.name} (Tồn kho: ${p.currentStock ?? 0} ${p.unit?.symbol ?? ''})'),
-                    );
+                  if (activeProducts.isNotEmpty && _selectedProduct == null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _onProductSelected(activeProducts.first);
+                    });
                   }
+                  
+                  final currentValue = _selectedProduct?.id;
 
-                  // If multiple products, show dropdown
-                  return DropdownButtonFormField<ProductEntity>(
-                    value: _selectedProduct,
+                  // Always show dropdown
+                  return DropdownButtonFormField<int>(
+                    value: currentValue,
                     decoration: const InputDecoration(
                       labelText: 'Chọn Sản Phẩm *',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.inventory_2),
                     ),
-                    items: activeProducts.map((p) => DropdownMenuItem(
-                      value: p, 
+                    items: activeProducts.map((p) => DropdownMenuItem<int>(
+                      value: p.id, 
                       child: Text('${p.name} (Tồn kho: ${p.currentStock ?? 0} ${p.unit?.symbol ?? ''})')
                     )).toList(),
-                    onChanged: _onProductSelected,
+                    onChanged: (id) {
+                      if (id != null) {
+                        final product = activeProducts.firstWhere((p) => p.id == id);
+                        _onProductSelected(product);
+                      }
+                    },
                     validator: (val) => val == null ? 'Vui lòng chọn sản phẩm' : null,
                   );
                 },

@@ -83,6 +83,7 @@ class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () => context.push('/suppliers/add'),
         child: const Icon(Icons.add),
       ),

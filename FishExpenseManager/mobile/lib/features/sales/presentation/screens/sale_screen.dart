@@ -4,6 +4,8 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../customers/application/customer_provider.dart';
+import '../../../products/application/product_provider.dart';
+import '../../../products/domain/entities/product_entity.dart';
 import '../../application/sale_provider.dart';
 import '../../domain/entities/sale_entity.dart';
 
@@ -21,8 +23,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   final _paidController = TextEditingController();
 
   int? _selectedCustomerId;
-  // Default product is "Chứng nước" (id=1)
-  final int _productId = 1;
+  ProductEntity? _selectedProduct;
 
   double get _totalAmount {
     final qty = double.tryParse(_qtyController.text) ?? 0;
@@ -49,6 +50,10 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn khách hàng')));
       return;
     }
+    if (_selectedProduct == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn sản phẩm')));
+      return;
+    }
 
     final qty = double.tryParse(_qtyController.text) ?? 0;
     final price = double.tryParse(_priceController.text) ?? 0;
@@ -63,6 +68,18 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tiền trả không được lớn hơn tổng tiền')));
       return;
     }
+    
+    // Kiểm tra tồn kho (BR-005)
+    final currentStock = _selectedProduct!.currentStock ?? 0;
+    if (qty > currentStock) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi: Số lượng bán ($qty) vượt quá tồn kho hiện tại ($currentStock)'),
+          backgroundColor: AppColors.error,
+        )
+      );
+      return;
+    }
 
     try {
       final useCase = ref.read(createSaleUseCaseProvider);
@@ -73,7 +90,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
         saleDate: DateTime.now(),
         items: [
           SaleItemEntity(
-            productId: _productId,
+            productId: _selectedProduct!.id!,
             quantity: qty,
             unitPrice: price,
             subTotal: total,
@@ -86,7 +103,11 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
         _qtyController.clear();
         _priceController.clear();
         _paidController.clear();
-        setState(() => _selectedCustomerId = null);
+        setState(() {
+          _selectedCustomerId = null;
+          // Refresh products to get updated stock
+          ref.invalidate(productListProvider);
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -95,9 +116,19 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     }
   }
 
+  void _onProductSelected(ProductEntity? product) {
+    setState(() {
+      _selectedProduct = product;
+      if (product?.defaultPrice != null) {
+        _priceController.text = product!.defaultPrice.toString();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final customersAsync = ref.watch(customersProvider);
+    final productsAsync = ref.watch(productListProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Bán hàng'), centerTitle: true),
@@ -134,14 +165,58 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
 
-              // Product (fixed for now)
-              InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Sản phẩm',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.inventory_2),
-                ),
-                child: const Text('Chứng nước (mặc định)'),
+              // Product selection
+              productsAsync.when(
+                data: (products) {
+                  final activeProducts = products.where((p) => p.isActive).toList();
+                  
+                  if (activeProducts.isEmpty) {
+                    return const InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Sản phẩm',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.warning, color: AppColors.error),
+                      ),
+                      child: Text('Chưa có sản phẩm nào. Vui lòng thêm sản phẩm.'),
+                    );
+                  }
+
+                  // If exactly 1 product, auto-select it and show as readonly
+                  if (activeProducts.length == 1) {
+                    final p = activeProducts.first;
+                    if (_selectedProduct == null) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _onProductSelected(p);
+                      });
+                    }
+                    return InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Sản phẩm (mặc định)',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.inventory_2),
+                      ),
+                      child: Text('${p.name} (Tồn kho: ${p.currentStock ?? 0} ${p.unit?.symbol ?? ''})'),
+                    );
+                  }
+
+                  // If multiple products, show dropdown
+                  return DropdownButtonFormField<ProductEntity>(
+                    value: _selectedProduct,
+                    decoration: const InputDecoration(
+                      labelText: 'Chọn Sản Phẩm *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.inventory_2),
+                    ),
+                    items: activeProducts.map((p) => DropdownMenuItem(
+                      value: p, 
+                      child: Text('${p.name} (Tồn kho: ${p.currentStock ?? 0} ${p.unit?.symbol ?? ''})')
+                    )).toList(),
+                    onChanged: _onProductSelected,
+                    validator: (val) => val == null ? 'Vui lòng chọn sản phẩm' : null,
+                  );
+                },
+                loading: () => const LinearProgressIndicator(),
+                error: (e, _) => Text('Lỗi tải sản phẩm: $e'),
               ),
               const SizedBox(height: AppSpacing.md),
 
@@ -149,10 +224,10 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               TextFormField(
                 controller: _qtyController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Số Lượng (kg) *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.scale),
+                decoration: InputDecoration(
+                  labelText: 'Số Lượng (${_selectedProduct?.unit?.symbol ?? 'kg'}) *',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.scale),
                 ),
                 onChanged: (_) => setState(() {}),
                 validator: (val) {
@@ -169,7 +244,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 controller: _priceController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Đơn Giá (đ/kg) *',
+                  labelText: 'Đơn Giá (đ) *',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.attach_money),
                 ),

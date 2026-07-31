@@ -12,6 +12,18 @@ import '../../features/sales/presentation/screens/sale_screen.dart';
 import '../../features/debts/presentation/screens/debt_list_screen.dart';
 import '../../features/debts/presentation/screens/collect_debt_screen.dart';
 import '../../features/settings/presentation/screens/more_screen.dart';
+import '../../features/reports/presentation/screens/report_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/suppliers/presentation/screens/supplier_list_screen.dart';
+import '../../features/suppliers/presentation/screens/add_edit_supplier_screen.dart';
+import '../../features/suppliers/domain/entities/supplier_entity.dart';
+import '../../features/products/presentation/screens/product_list_screen.dart';
+import '../../features/products/presentation/screens/add_edit_product_screen.dart';
+import '../../features/products/presentation/screens/product_detail_screen.dart';
+import '../../features/products/domain/entities/product_entity.dart';
+import '../../features/inventory/presentation/screens/inventory_dashboard_screen.dart';
+import '../../features/inventory/presentation/screens/inventory_adjustment_screen.dart';
+import '../../features/inventory/presentation/screens/inventory_history_screen.dart';
 import 'main_scaffold.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -67,6 +79,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/reports',
+                builder: (context, state) => const ReportScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/more',
                 builder: (context, state) => const MoreScreen(),
               ),
@@ -103,6 +123,63 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final customerId = int.parse(state.pathParameters['customerId']!);
           return CollectDebtScreen(customerId: customerId);
+        },
+      ),
+      // --- Phase 3 Routes ---
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/suppliers',
+        builder: (context, state) => const SupplierListScreen(),
+      ),
+      GoRoute(
+        path: '/suppliers/add',
+        builder: (context, state) => const AddEditSupplierScreen(),
+      ),
+      GoRoute(
+        path: '/suppliers/edit/:id',
+        builder: (context, state) {
+          final supplier = state.extra as SupplierEntity?;
+          return AddEditSupplierScreen(supplier: supplier);
+        },
+      ),
+      GoRoute(
+        path: '/products',
+        builder: (context, state) => const ProductListScreen(),
+      ),
+      GoRoute(
+        path: '/products/add',
+        builder: (context, state) => const AddEditProductScreen(),
+      ),
+      GoRoute(
+        path: '/products/edit/:id',
+        builder: (context, state) {
+          final product = state.extra as ProductEntity?;
+          return AddEditProductScreen(product: product);
+        },
+      ),
+      GoRoute(
+        path: '/products/:id',
+        builder: (context, state) {
+          final product = state.extra as ProductEntity;
+          return ProductDetailScreen(product: product);
+        },
+      ),
+      GoRoute(
+        path: '/inventory',
+        builder: (context, state) => const InventoryDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/inventory/history',
+        builder: (context, state) => const InventoryHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/inventory/adjust/:id',
+        builder: (context, state) {
+          final product = state.extra as ProductEntity;
+          return InventoryAdjustmentScreen(product: product);
         },
       ),
     ],

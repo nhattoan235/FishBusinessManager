@@ -18,4 +18,16 @@ abstract class CurrencyFormatter {
     final absAmount = amount.abs();
     return '$prefix${format(absAmount)}';
   }
+
+  /// Định dạng ngắn gọn cho biểu đồ. Ví dụ: 1.500.000 -> "1.5tr", 500.000 -> "500k"
+  static String formatCompact(num amount) {
+    if (amount >= 1000000) {
+      final val = amount / 1000000;
+      return '${val % 1 == 0 ? val.toInt() : val.toStringAsFixed(1)}tr';
+    } else if (amount >= 1000) {
+      final val = amount / 1000;
+      return '${val % 1 == 0 ? val.toInt() : val.toStringAsFixed(0)}k';
+    }
+    return amount.toStringAsFixed(0);
+  }
 }

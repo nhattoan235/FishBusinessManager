@@ -10,15 +10,26 @@ class MoreScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Chức năng khác')),
       body: ListView(
         children: [
-          const ListTile(
-            leading: Icon(Icons.inventory_2),
-            title: Text('Kho hàng'),
-            subtitle: Text('Giai đoạn 3'),
+          ListTile(
+            leading: const Icon(Icons.inventory_2),
+            title: const Text('Kho hàng'),
+            subtitle: const Text('Quản lý nhập xuất tồn'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/inventory'),
           ),
-          const ListTile(
-            leading: Icon(Icons.category),
-            title: Text('Sản phẩm & Đơn vị'),
-            subtitle: Text('Giai đoạn 3'),
+          ListTile(
+            leading: const Icon(Icons.category),
+            title: const Text('Sản phẩm & Đơn vị'),
+            subtitle: const Text('Danh mục hàng hóa'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/products'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.business),
+            title: const Text('Nhà cung cấp'),
+            subtitle: const Text('Nguồn nhập hàng'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/suppliers'),
           ),
           ListTile(
             leading: const Icon(Icons.people),
@@ -29,15 +40,12 @@ class MoreScreen extends StatelessWidget {
               context.push('/customers');
             },
           ),
-          const ListTile(
-            leading: Icon(Icons.backup),
-            title: Text('Sao lưu & Khôi phục'),
-            subtitle: Text('Giai đoạn 3'),
-          ),
-          const ListTile(
-            leading: Icon(Icons.settings),
-            title: Text('Cài đặt'),
-            subtitle: Text('Giai đoạn 3'),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Cài đặt'),
+            subtitle: const Text('Sao lưu và tùy chỉnh'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings'),
           ),
         ],
       ),

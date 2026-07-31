@@ -9,10 +9,12 @@ abstract class AppColors {
   
   // Income (Thu) — Màu xanh lá
   static const Color income = Color(0xFF2E7D32);
+  static const Color success = income; // Alias for success
   static const Color incomeBackground = Color(0xFFE8F5E9);
   
   // Expense (Chi) — Màu đỏ
   static const Color expense = Color(0xFFC62828);
+  static const Color error = expense; // Alias for error
   static const Color expenseBackground = Color(0xFFFFEBEE);
 
   // Warning (Cảnh báo) — Màu cam

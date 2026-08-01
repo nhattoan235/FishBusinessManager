@@ -4698,6 +4698,22 @@ class $AppSettingsTable extends AppSettings
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(30));
+  static const VerificationMeta _backupTransactionThresholdMeta =
+      const VerificationMeta('backupTransactionThreshold');
+  @override
+  late final GeneratedColumn<int> backupTransactionThreshold =
+      GeneratedColumn<int>('backup_transaction_threshold', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(20));
+  static const VerificationMeta _transactionsSinceBackupMeta =
+      const VerificationMeta('transactionsSinceBackup');
+  @override
+  late final GeneratedColumn<int> transactionsSinceBackup =
+      GeneratedColumn<int>('transactions_since_backup', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
   static const VerificationMeta _useGoogleDriveMeta =
       const VerificationMeta('useGoogleDrive');
   @override
@@ -4734,6 +4750,8 @@ class $AppSettingsTable extends AppSettings
         autoBackup,
         backupInterval,
         keepBackupDays,
+        backupTransactionThreshold,
+        transactionsSinceBackup,
         useGoogleDrive,
         useBoldFont,
         updatedAt
@@ -4777,6 +4795,20 @@ class $AppSettingsTable extends AppSettings
           keepBackupDays.isAcceptableOrUnknown(
               data['keep_backup_days']!, _keepBackupDaysMeta));
     }
+    if (data.containsKey('backup_transaction_threshold')) {
+      context.handle(
+          _backupTransactionThresholdMeta,
+          backupTransactionThreshold.isAcceptableOrUnknown(
+              data['backup_transaction_threshold']!,
+              _backupTransactionThresholdMeta));
+    }
+    if (data.containsKey('transactions_since_backup')) {
+      context.handle(
+          _transactionsSinceBackupMeta,
+          transactionsSinceBackup.isAcceptableOrUnknown(
+              data['transactions_since_backup']!,
+              _transactionsSinceBackupMeta));
+    }
     if (data.containsKey('use_google_drive')) {
       context.handle(
           _useGoogleDriveMeta,
@@ -4814,6 +4846,12 @@ class $AppSettingsTable extends AppSettings
           .read(DriftSqlType.int, data['${effectivePrefix}backup_interval'])!,
       keepBackupDays: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}keep_backup_days'])!,
+      backupTransactionThreshold: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}backup_transaction_threshold'])!,
+      transactionsSinceBackup: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}transactions_since_backup'])!,
       useGoogleDrive: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}use_google_drive'])!,
       useBoldFont: attachedDatabase.typeMapping
@@ -4836,6 +4874,8 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
   final bool autoBackup;
   final int backupInterval;
   final int keepBackupDays;
+  final int backupTransactionThreshold;
+  final int transactionsSinceBackup;
   final bool useGoogleDrive;
   final bool useBoldFont;
   final DateTime updatedAt;
@@ -4846,6 +4886,8 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       required this.autoBackup,
       required this.backupInterval,
       required this.keepBackupDays,
+      required this.backupTransactionThreshold,
+      required this.transactionsSinceBackup,
       required this.useGoogleDrive,
       required this.useBoldFont,
       required this.updatedAt});
@@ -4858,6 +4900,9 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
     map['auto_backup'] = Variable<bool>(autoBackup);
     map['backup_interval'] = Variable<int>(backupInterval);
     map['keep_backup_days'] = Variable<int>(keepBackupDays);
+    map['backup_transaction_threshold'] =
+        Variable<int>(backupTransactionThreshold);
+    map['transactions_since_backup'] = Variable<int>(transactionsSinceBackup);
     map['use_google_drive'] = Variable<bool>(useGoogleDrive);
     map['use_bold_font'] = Variable<bool>(useBoldFont);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -4872,6 +4917,8 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       autoBackup: Value(autoBackup),
       backupInterval: Value(backupInterval),
       keepBackupDays: Value(keepBackupDays),
+      backupTransactionThreshold: Value(backupTransactionThreshold),
+      transactionsSinceBackup: Value(transactionsSinceBackup),
       useGoogleDrive: Value(useGoogleDrive),
       useBoldFont: Value(useBoldFont),
       updatedAt: Value(updatedAt),
@@ -4888,6 +4935,10 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       autoBackup: serializer.fromJson<bool>(json['autoBackup']),
       backupInterval: serializer.fromJson<int>(json['backupInterval']),
       keepBackupDays: serializer.fromJson<int>(json['keepBackupDays']),
+      backupTransactionThreshold:
+          serializer.fromJson<int>(json['backupTransactionThreshold']),
+      transactionsSinceBackup:
+          serializer.fromJson<int>(json['transactionsSinceBackup']),
       useGoogleDrive: serializer.fromJson<bool>(json['useGoogleDrive']),
       useBoldFont: serializer.fromJson<bool>(json['useBoldFont']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -4903,6 +4954,10 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       'autoBackup': serializer.toJson<bool>(autoBackup),
       'backupInterval': serializer.toJson<int>(backupInterval),
       'keepBackupDays': serializer.toJson<int>(keepBackupDays),
+      'backupTransactionThreshold':
+          serializer.toJson<int>(backupTransactionThreshold),
+      'transactionsSinceBackup':
+          serializer.toJson<int>(transactionsSinceBackup),
       'useGoogleDrive': serializer.toJson<bool>(useGoogleDrive),
       'useBoldFont': serializer.toJson<bool>(useBoldFont),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -4916,6 +4971,8 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
           bool? autoBackup,
           int? backupInterval,
           int? keepBackupDays,
+          int? backupTransactionThreshold,
+          int? transactionsSinceBackup,
           bool? useGoogleDrive,
           bool? useBoldFont,
           DateTime? updatedAt}) =>
@@ -4926,6 +4983,10 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
         autoBackup: autoBackup ?? this.autoBackup,
         backupInterval: backupInterval ?? this.backupInterval,
         keepBackupDays: keepBackupDays ?? this.keepBackupDays,
+        backupTransactionThreshold:
+            backupTransactionThreshold ?? this.backupTransactionThreshold,
+        transactionsSinceBackup:
+            transactionsSinceBackup ?? this.transactionsSinceBackup,
         useGoogleDrive: useGoogleDrive ?? this.useGoogleDrive,
         useBoldFont: useBoldFont ?? this.useBoldFont,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -4943,6 +5004,12 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
       keepBackupDays: data.keepBackupDays.present
           ? data.keepBackupDays.value
           : this.keepBackupDays,
+      backupTransactionThreshold: data.backupTransactionThreshold.present
+          ? data.backupTransactionThreshold.value
+          : this.backupTransactionThreshold,
+      transactionsSinceBackup: data.transactionsSinceBackup.present
+          ? data.transactionsSinceBackup.value
+          : this.transactionsSinceBackup,
       useGoogleDrive: data.useGoogleDrive.present
           ? data.useGoogleDrive.value
           : this.useGoogleDrive,
@@ -4961,6 +5028,8 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
           ..write('autoBackup: $autoBackup, ')
           ..write('backupInterval: $backupInterval, ')
           ..write('keepBackupDays: $keepBackupDays, ')
+          ..write('backupTransactionThreshold: $backupTransactionThreshold, ')
+          ..write('transactionsSinceBackup: $transactionsSinceBackup, ')
           ..write('useGoogleDrive: $useGoogleDrive, ')
           ..write('useBoldFont: $useBoldFont, ')
           ..write('updatedAt: $updatedAt')
@@ -4969,8 +5038,18 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
   }
 
   @override
-  int get hashCode => Object.hash(id, fontScale, theme, autoBackup,
-      backupInterval, keepBackupDays, useGoogleDrive, useBoldFont, updatedAt);
+  int get hashCode => Object.hash(
+      id,
+      fontScale,
+      theme,
+      autoBackup,
+      backupInterval,
+      keepBackupDays,
+      backupTransactionThreshold,
+      transactionsSinceBackup,
+      useGoogleDrive,
+      useBoldFont,
+      updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4981,6 +5060,8 @@ class AppSettingData extends DataClass implements Insertable<AppSettingData> {
           other.autoBackup == this.autoBackup &&
           other.backupInterval == this.backupInterval &&
           other.keepBackupDays == this.keepBackupDays &&
+          other.backupTransactionThreshold == this.backupTransactionThreshold &&
+          other.transactionsSinceBackup == this.transactionsSinceBackup &&
           other.useGoogleDrive == this.useGoogleDrive &&
           other.useBoldFont == this.useBoldFont &&
           other.updatedAt == this.updatedAt);
@@ -4993,6 +5074,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
   final Value<bool> autoBackup;
   final Value<int> backupInterval;
   final Value<int> keepBackupDays;
+  final Value<int> backupTransactionThreshold;
+  final Value<int> transactionsSinceBackup;
   final Value<bool> useGoogleDrive;
   final Value<bool> useBoldFont;
   final Value<DateTime> updatedAt;
@@ -5003,6 +5086,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
     this.autoBackup = const Value.absent(),
     this.backupInterval = const Value.absent(),
     this.keepBackupDays = const Value.absent(),
+    this.backupTransactionThreshold = const Value.absent(),
+    this.transactionsSinceBackup = const Value.absent(),
     this.useGoogleDrive = const Value.absent(),
     this.useBoldFont = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -5014,6 +5099,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
     this.autoBackup = const Value.absent(),
     this.backupInterval = const Value.absent(),
     this.keepBackupDays = const Value.absent(),
+    this.backupTransactionThreshold = const Value.absent(),
+    this.transactionsSinceBackup = const Value.absent(),
     this.useGoogleDrive = const Value.absent(),
     this.useBoldFont = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -5025,6 +5112,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
     Expression<bool>? autoBackup,
     Expression<int>? backupInterval,
     Expression<int>? keepBackupDays,
+    Expression<int>? backupTransactionThreshold,
+    Expression<int>? transactionsSinceBackup,
     Expression<bool>? useGoogleDrive,
     Expression<bool>? useBoldFont,
     Expression<DateTime>? updatedAt,
@@ -5036,6 +5125,10 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
       if (autoBackup != null) 'auto_backup': autoBackup,
       if (backupInterval != null) 'backup_interval': backupInterval,
       if (keepBackupDays != null) 'keep_backup_days': keepBackupDays,
+      if (backupTransactionThreshold != null)
+        'backup_transaction_threshold': backupTransactionThreshold,
+      if (transactionsSinceBackup != null)
+        'transactions_since_backup': transactionsSinceBackup,
       if (useGoogleDrive != null) 'use_google_drive': useGoogleDrive,
       if (useBoldFont != null) 'use_bold_font': useBoldFont,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -5049,6 +5142,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
       Value<bool>? autoBackup,
       Value<int>? backupInterval,
       Value<int>? keepBackupDays,
+      Value<int>? backupTransactionThreshold,
+      Value<int>? transactionsSinceBackup,
       Value<bool>? useGoogleDrive,
       Value<bool>? useBoldFont,
       Value<DateTime>? updatedAt}) {
@@ -5059,6 +5154,10 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
       autoBackup: autoBackup ?? this.autoBackup,
       backupInterval: backupInterval ?? this.backupInterval,
       keepBackupDays: keepBackupDays ?? this.keepBackupDays,
+      backupTransactionThreshold:
+          backupTransactionThreshold ?? this.backupTransactionThreshold,
+      transactionsSinceBackup:
+          transactionsSinceBackup ?? this.transactionsSinceBackup,
       useGoogleDrive: useGoogleDrive ?? this.useGoogleDrive,
       useBoldFont: useBoldFont ?? this.useBoldFont,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -5086,6 +5185,14 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
     if (keepBackupDays.present) {
       map['keep_backup_days'] = Variable<int>(keepBackupDays.value);
     }
+    if (backupTransactionThreshold.present) {
+      map['backup_transaction_threshold'] =
+          Variable<int>(backupTransactionThreshold.value);
+    }
+    if (transactionsSinceBackup.present) {
+      map['transactions_since_backup'] =
+          Variable<int>(transactionsSinceBackup.value);
+    }
     if (useGoogleDrive.present) {
       map['use_google_drive'] = Variable<bool>(useGoogleDrive.value);
     }
@@ -5107,6 +5214,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingData> {
           ..write('autoBackup: $autoBackup, ')
           ..write('backupInterval: $backupInterval, ')
           ..write('keepBackupDays: $keepBackupDays, ')
+          ..write('backupTransactionThreshold: $backupTransactionThreshold, ')
+          ..write('transactionsSinceBackup: $transactionsSinceBackup, ')
           ..write('useGoogleDrive: $useGoogleDrive, ')
           ..write('useBoldFont: $useBoldFont, ')
           ..write('updatedAt: $updatedAt')
@@ -10493,6 +10602,8 @@ typedef $$AppSettingsTableCreateCompanionBuilder = AppSettingsCompanion
   Value<bool> autoBackup,
   Value<int> backupInterval,
   Value<int> keepBackupDays,
+  Value<int> backupTransactionThreshold,
+  Value<int> transactionsSinceBackup,
   Value<bool> useGoogleDrive,
   Value<bool> useBoldFont,
   Value<DateTime> updatedAt,
@@ -10505,6 +10616,8 @@ typedef $$AppSettingsTableUpdateCompanionBuilder = AppSettingsCompanion
   Value<bool> autoBackup,
   Value<int> backupInterval,
   Value<int> keepBackupDays,
+  Value<int> backupTransactionThreshold,
+  Value<int> transactionsSinceBackup,
   Value<bool> useGoogleDrive,
   Value<bool> useBoldFont,
   Value<DateTime> updatedAt,
@@ -10537,6 +10650,14 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<int> get keepBackupDays => $composableBuilder(
       column: $table.keepBackupDays,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get backupTransactionThreshold => $composableBuilder(
+      column: $table.backupTransactionThreshold,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get transactionsSinceBackup => $composableBuilder(
+      column: $table.transactionsSinceBackup,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get useGoogleDrive => $composableBuilder(
@@ -10579,6 +10700,14 @@ class $$AppSettingsTableOrderingComposer
       column: $table.keepBackupDays,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get backupTransactionThreshold => $composableBuilder(
+      column: $table.backupTransactionThreshold,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get transactionsSinceBackup => $composableBuilder(
+      column: $table.transactionsSinceBackup,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get useGoogleDrive => $composableBuilder(
       column: $table.useGoogleDrive,
       builder: (column) => ColumnOrderings(column));
@@ -10616,6 +10745,12 @@ class $$AppSettingsTableAnnotationComposer
 
   GeneratedColumn<int> get keepBackupDays => $composableBuilder(
       column: $table.keepBackupDays, builder: (column) => column);
+
+  GeneratedColumn<int> get backupTransactionThreshold => $composableBuilder(
+      column: $table.backupTransactionThreshold, builder: (column) => column);
+
+  GeneratedColumn<int> get transactionsSinceBackup => $composableBuilder(
+      column: $table.transactionsSinceBackup, builder: (column) => column);
 
   GeneratedColumn<bool> get useGoogleDrive => $composableBuilder(
       column: $table.useGoogleDrive, builder: (column) => column);
@@ -10659,6 +10794,8 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             Value<bool> autoBackup = const Value.absent(),
             Value<int> backupInterval = const Value.absent(),
             Value<int> keepBackupDays = const Value.absent(),
+            Value<int> backupTransactionThreshold = const Value.absent(),
+            Value<int> transactionsSinceBackup = const Value.absent(),
             Value<bool> useGoogleDrive = const Value.absent(),
             Value<bool> useBoldFont = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -10670,6 +10807,8 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             autoBackup: autoBackup,
             backupInterval: backupInterval,
             keepBackupDays: keepBackupDays,
+            backupTransactionThreshold: backupTransactionThreshold,
+            transactionsSinceBackup: transactionsSinceBackup,
             useGoogleDrive: useGoogleDrive,
             useBoldFont: useBoldFont,
             updatedAt: updatedAt,
@@ -10681,6 +10820,8 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             Value<bool> autoBackup = const Value.absent(),
             Value<int> backupInterval = const Value.absent(),
             Value<int> keepBackupDays = const Value.absent(),
+            Value<int> backupTransactionThreshold = const Value.absent(),
+            Value<int> transactionsSinceBackup = const Value.absent(),
             Value<bool> useGoogleDrive = const Value.absent(),
             Value<bool> useBoldFont = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -10692,6 +10833,8 @@ class $$AppSettingsTableTableManager extends RootTableManager<
             autoBackup: autoBackup,
             backupInterval: backupInterval,
             keepBackupDays: keepBackupDays,
+            backupTransactionThreshold: backupTransactionThreshold,
+            transactionsSinceBackup: transactionsSinceBackup,
             useGoogleDrive: useGoogleDrive,
             useBoldFont: useBoldFont,
             updatedAt: updatedAt,

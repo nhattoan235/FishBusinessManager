@@ -1,22 +1,23 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:fish_business_manager/core/widgets/primary_button.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:fish_business_manager/app/app.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const FishBusinessApp());
+  testWidgets('Nút chính hiển thị nhãn và nhận thao tác', (tester) async {
+    var pressed = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PrimaryButton(
+            text: 'Sao lưu ngay',
+            onPressed: () => pressed = true,
+          ),
+        ),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    // Note: The default test logic below likely won't work with your custom UI,
-    // but this fix will allow the file to compile.
-    // expect(find.text('0'), findsOneWidget);
+    expect(find.text('Sao lưu ngay'), findsOneWidget);
+    await tester.tap(find.text('Sao lưu ngay'));
+    expect(pressed, isTrue);
   });
 }

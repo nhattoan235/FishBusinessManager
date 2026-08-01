@@ -11,4 +11,23 @@ mixin _$SaleDaoMixin on DatabaseAccessor<AppDatabase> {
   $UnitsTable get units => attachedDatabase.units;
   $ProductsTable get products => attachedDatabase.products;
   $SaleItemsTable get saleItems => attachedDatabase.saleItems;
+  SaleDaoManager get managers => SaleDaoManager(this);
+}
+
+class SaleDaoManager {
+  final _$SaleDaoMixin _db;
+  SaleDaoManager(this._db);
+  $$CustomersTableTableManager get customers =>
+      $$CustomersTableTableManager(_db.attachedDatabase, _db.customers);
+  $$SaleDocumentsTableTableManager get saleDocuments =>
+      $$SaleDocumentsTableTableManager(_db.attachedDatabase, _db.saleDocuments);
+  $$ProductCategoriesTableTableManager get productCategories =>
+      $$ProductCategoriesTableTableManager(
+          _db.attachedDatabase, _db.productCategories);
+  $$UnitsTableTableManager get units =>
+      $$UnitsTableTableManager(_db.attachedDatabase, _db.units);
+  $$ProductsTableTableManager get products =>
+      $$ProductsTableTableManager(_db.attachedDatabase, _db.products);
+  $$SaleItemsTableTableManager get saleItems =>
+      $$SaleItemsTableTableManager(_db.attachedDatabase, _db.saleItems);
 }

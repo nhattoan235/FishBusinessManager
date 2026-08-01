@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
 import 'package:uuid/uuid.dart';
+
+import 'connection/database_connection.dart';
 
 import 'tables/customers_table.dart';
 import 'tables/suppliers_table.dart';
@@ -59,26 +60,54 @@ part 'app_database.g.dart';
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? e])
-      : super(e ?? driftDatabase(
-          name: 'fish_business_manager_db',
-        ));
+  AppDatabase._(QueryExecutor e) : super(e);
+
+  AppDatabase.forTesting(QueryExecutor executor) : super(executor);
+
+  factory AppDatabase({String? encryptionKey}) => AppDatabase._(
+        openDatabaseConnection(encryptionKey: encryptionKey),
+      );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+          await _createAutoBackupTrigger();
           await _seedData();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          if (from == 1 && to == 2) {
+          if (from < 2) {
             await m.addColumn(appSettings, appSettings.useBoldFont);
+          }
+          if (from < 3) {
+            await m.addColumn(
+              appSettings,
+              appSettings.backupTransactionThreshold,
+            );
+            await m.addColumn(appSettings, appSettings.transactionsSinceBackup);
+            await _createAutoBackupTrigger();
           }
         },
       );
+
+  Future<void> _createAutoBackupTrigger() async {
+    await customStatement(
+      'DROP TRIGGER IF EXISTS count_transactions_for_backup',
+    );
+    await customStatement('''
+      CREATE TRIGGER count_transactions_for_backup
+      AFTER INSERT ON transactions
+      BEGIN
+        UPDATE app_settings
+        SET transactions_since_backup = transactions_since_backup + 1,
+            updated_at = CAST(strftime('%s', 'now') AS INTEGER)
+        WHERE id = 1;
+      END
+    ''');
+  }
 
   Future<void> _seedData() async {
     const uuid = Uuid();
@@ -151,6 +180,8 @@ class AppDatabase extends _$AppDatabase {
         autoBackup: const Value(true),
         backupInterval: const Value(24),
         keepBackupDays: const Value(30),
+        backupTransactionThreshold: const Value(20),
+        transactionsSinceBackup: const Value(0),
         useGoogleDrive: const Value(false),
         updatedAt: Value(now),
       ),
@@ -160,8 +191,8 @@ class AppDatabase extends _$AppDatabase {
     await into(databaseInfo).insert(
       DatabaseInfoCompanion.insert(
         id: const Value(1),
-        schemaVersion: 1,
-        databaseVersion: 1,
+        schemaVersion: 3,
+        databaseVersion: 3,
       ),
     );
   }

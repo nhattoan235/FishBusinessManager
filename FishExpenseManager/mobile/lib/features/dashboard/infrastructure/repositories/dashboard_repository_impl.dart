@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/dashboard_summary.dart';
@@ -11,16 +10,6 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
   @override
   Future<DashboardSummary> getDashboardSummary() async {
-    if (kIsWeb) {
-      return DashboardSummary(
-        totalCash: 12500000,
-        todayIncome: 2500000,
-        todayExpense: 500000,
-        totalReceivables: 3200000,
-        totalInventory: 150,
-      );
-    }
-
     // 1. Total Cash: Sum(income) - Sum(expense) from transactions
     final cashResult = await _db
         .customSelect(
@@ -28,34 +17,38 @@ class DashboardRepositoryImpl implements DashboardRepository {
         )
         .getSingle();
     final totalCashRaw = cashResult.data['total'];
-    final totalCash = (totalCashRaw != null) ? (totalCashRaw as num).toDouble() : 0.0;
+    final totalCash =
+        (totalCashRaw != null) ? (totalCashRaw as num).toDouble() : 0.0;
 
     // 2. Today Income & Expense
     final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch ~/ 1000;
-    final todayResult = await _db
-        .customSelect(
-          '''
+    final startOfDay =
+        DateTime(now.year, now.month, now.day).millisecondsSinceEpoch ~/ 1000;
+    final todayResult = await _db.customSelect(
+      '''
       SELECT 
         SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END) AS income,
         SUM(CASE WHEN is_income = 0 THEN amount ELSE 0 END) AS expense
       FROM transactions 
       WHERE date >= ?
       ''',
-          variables: [Variable.withInt(startOfDay)],
-        )
-        .getSingle();
+      variables: [Variable.withInt(startOfDay)],
+    ).getSingle();
     final todayIncomeRaw = todayResult.data['income'];
     final todayExpenseRaw = todayResult.data['expense'];
-    final todayIncome = (todayIncomeRaw != null) ? (todayIncomeRaw as num).toDouble() : 0.0;
-    final todayExpense = (todayExpenseRaw != null) ? (todayExpenseRaw as num).toDouble() : 0.0;
+    final todayIncome =
+        (todayIncomeRaw != null) ? (todayIncomeRaw as num).toDouble() : 0.0;
+    final todayExpense =
+        (todayExpenseRaw != null) ? (todayExpenseRaw as num).toDouble() : 0.0;
 
     // 3. Total Receivables: Sum of CustomerBalances (current_debt column)
     final debtResult = await _db
-        .customSelect('SELECT SUM(current_debt) AS total FROM customer_balances WHERE current_debt > 0')
+        .customSelect(
+            'SELECT SUM(current_debt) AS total FROM customer_balances WHERE current_debt > 0')
         .getSingle();
     final debtRaw = debtResult.data['total'];
-    final totalReceivables = (debtRaw != null) ? (debtRaw as num).toDouble() : 0.0;
+    final totalReceivables =
+        (debtRaw != null) ? (debtRaw as num).toDouble() : 0.0;
 
     // 4. Total Inventory: Sum of quantity in InventoryEntries (Ledger: negative for sales)
     final invResult = await _db
@@ -75,15 +68,6 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
   @override
   Stream<DashboardSummary> watchDashboardSummary() {
-    if (kIsWeb) {
-      return Stream.value(DashboardSummary(
-        totalCash: 12500000,
-        todayIncome: 2500000,
-        todayExpense: 500000,
-        totalReceivables: 3200000,
-        totalInventory: 150,
-      ));
-    }
     // Use a periodic refresh approach since customSelect doesn't support reactive streams easily
     return Stream.periodic(const Duration(seconds: 5))
         .asyncMap((_) => getDashboardSummary())

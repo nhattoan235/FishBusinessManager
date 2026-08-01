@@ -3,7 +3,6 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/database/dao/sale_dao.dart';
 import '../../domain/entities/sale_entity.dart';
 import '../../domain/repositories/sale_repository.dart';
-import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 class SaleRepositoryImpl implements SaleRepository {
@@ -14,12 +13,11 @@ class SaleRepositoryImpl implements SaleRepository {
 
   @override
   Future<void> createSale(SaleEntity sale) async {
-    if (kIsWeb) return;
-    
     await _db.transaction(() async {
       // 1. Create Sale Document
       // DB stores amounts as int (đồng), entity uses double
-      final saleDocId = await _saleDao.insertSaleDocument(SaleDocumentsCompanion.insert(
+      final saleDocId =
+          await _saleDao.insertSaleDocument(SaleDocumentsCompanion.insert(
         uuid: sale.uuid,
         customerId: sale.customerId,
         totalAmount: sale.totalAmount.toInt(),
@@ -30,13 +28,15 @@ class SaleRepositoryImpl implements SaleRepository {
       ));
 
       // 2. Insert Sale Items and deduct inventory
-      final saleItemCompanions = sale.items.map((item) => SaleItemsCompanion.insert(
-        saleDocumentId: saleDocId,
-        productId: item.productId,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice.toInt(),
-        totalPrice: item.subTotal.toInt(),
-      )).toList();
+      final saleItemCompanions = sale.items
+          .map((item) => SaleItemsCompanion.insert(
+                saleDocumentId: saleDocId,
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice.toInt(),
+                totalPrice: item.subTotal.toInt(),
+              ))
+          .toList();
       await _saleDao.insertSaleItems(saleItemCompanions);
 
       // 3. Deduct inventory for each item (and check BR-802)
@@ -49,7 +49,8 @@ class SaleRepositoryImpl implements SaleRepository {
         final currentStock = stockResult.read<double>('stock');
 
         if (currentStock < item.quantity) {
-          throw Exception('Tồn kho không đủ cho sản phẩm ID: ${item.productId}');
+          throw Exception(
+              'Tồn kho không đủ cho sản phẩm ID: ${item.productId}');
         }
 
         await _db.inventoryDao.insertEntry(InventoryEntriesCompanion.insert(
@@ -80,25 +81,30 @@ class SaleRepositoryImpl implements SaleRepository {
       if (sale.debtAmount > 0) {
         // Upsert customer balance
         final existingBalances = await (_db.select(_db.customerBalances)
-          ..where((t) => t.customerId.equals(sale.customerId))).get();
+              ..where((t) => t.customerId.equals(sale.customerId)))
+            .get();
 
         if (existingBalances.isEmpty) {
-          await _db.into(_db.customerBalances).insert(CustomerBalancesCompanion.insert(
-            customerId: Value(sale.customerId),
-            currentDebt: Value(sale.debtAmount.toInt()),
-            updatedAt: Value(DateTime.now()),
-          ));
+          await _db
+              .into(_db.customerBalances)
+              .insert(CustomerBalancesCompanion.insert(
+                customerId: Value(sale.customerId),
+                currentDebt: Value(sale.debtAmount.toInt()),
+                updatedAt: Value(DateTime.now()),
+              ));
         } else {
           final current = existingBalances.first;
           await (_db.update(_db.customerBalances)
-            ..where((t) => t.customerId.equals(sale.customerId))).write(CustomerBalancesCompanion(
+                ..where((t) => t.customerId.equals(sale.customerId)))
+              .write(CustomerBalancesCompanion(
             currentDebt: Value(current.currentDebt + sale.debtAmount.toInt()),
             updatedAt: Value(DateTime.now()),
           ));
         }
 
         // Record debt transaction
-        await _db.debtDao.insertDebtTransaction(DebtTransactionsCompanion.insert(
+        await _db.debtDao
+            .insertDebtTransaction(DebtTransactionsCompanion.insert(
           customerId: sale.customerId,
           saleDocumentId: Value(saleDocId),
           changeType: 'increase',

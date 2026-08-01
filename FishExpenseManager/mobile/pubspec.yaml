@@ -17,10 +17,12 @@ dependencies:
   flutter_riverpod: ^2.5.1
   go_router: ^14.2.0
   
-  # Offline Database (Drift + SQLite)
-  drift: ^2.20.0
-  drift_flutter: ^0.2.1
-  sqlite3_flutter_libs: ^0.5.24
+  # Offline Database (Drift + SQLCipher)
+  drift: ^2.31.0
+  # Drift 2.x still uses sqlite3 2.x, so the 0.6.x SQLCipher native bundle is
+  # required until Drift adopts sqlite3 3.x native asset hooks.
+  sqlcipher_flutter_libs: ^0.6.8
+  sqlite3: ^2.9.4
   path_provider: ^2.1.4
   path: ^1.9.0
   
@@ -31,14 +33,22 @@ dependencies:
   shared_preferences: ^2.3.2
   file_picker: ^11.0.3
   fl_chart: ^1.2.0
+  archive: ^4.0.9
+  crypto: ^3.0.7
+  flutter_secure_storage: ^10.3.1
+  google_sign_in: ^7.2.0
+  extension_google_sign_in_as_googleapis_auth: ^3.0.0
+  googleapis: ^16.0.0
+  connectivity_plus: ^6.1.5
+  workmanager: ^0.9.0+3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^4.0.0
-  build_runner: 2.4.15
-  drift_dev: ^2.20.0
+  build_runner: ^2.6.1
+  drift_dev: ^2.31.0
 
 flutter:
   uses-material-design: true

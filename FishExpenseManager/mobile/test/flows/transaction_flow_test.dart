@@ -7,8 +7,9 @@ void main() {
   group('Transaction Flow Tests', () {
     test('Ghi nhận khoản thu thành công (BR-601)', () async {
       final container = createTestProviderContainer();
-      
-      final recordTransactionUseCase = container.read(recordTransactionUseCaseProvider);
+
+      final recordTransactionUseCase =
+          container.read(recordTransactionUseCaseProvider);
       final transactionRepo = container.read(transactionRepositoryProvider);
 
       // Đếm giao dịch ban đầu (Nên là 0)
@@ -33,17 +34,18 @@ void main() {
         endDate: DateTime.now().add(const Duration(days: 1)),
       );
       expect(transactions.length, initialCount + 1);
-      final latestTx = transactions.first; // DESC order usually, let's verify
       // In Drift queries, usually ordered by date DESC. Let's find the specific one.
-      final ourTx = transactions.firstWhere((t) => t.amount == 200000 && t.type == 'Bán lẻ');
+      final ourTx = transactions
+          .firstWhere((t) => t.amount == 200000 && t.type == 'Bán lẻ');
       expect(ourTx.isIncome, true);
       expect(ourTx.description, 'Khách vãng lai mua');
     });
 
     test('Ghi nhận khoản chi thành công (BR-601)', () async {
       final container = createTestProviderContainer();
-      
-      final recordTransactionUseCase = container.read(recordTransactionUseCaseProvider);
+
+      final recordTransactionUseCase =
+          container.read(recordTransactionUseCaseProvider);
       final transactionRepo = container.read(transactionRepositoryProvider);
 
       // 1. Thực hiện ghi chi
@@ -60,15 +62,18 @@ void main() {
         startDate: DateTime.now().subtract(const Duration(days: 1)),
         endDate: DateTime.now().add(const Duration(days: 1)),
       );
-      final ourTx = transactions.firstWhere((t) => t.amount == 50000 && t.type == 'Xăng xe');
+      final ourTx = transactions
+          .firstWhere((t) => t.amount == 50000 && t.type == 'Xăng xe');
       expect(ourTx.isIncome, false);
       expect(ourTx.description, 'Đổ xăng đi giao hàng');
     });
 
-    test('Ghi nhận giao dịch thất bại - Số tiền âm hoặc bằng 0 (BR-603)', () async {
+    test('Ghi nhận giao dịch thất bại - Số tiền âm hoặc bằng 0 (BR-603)',
+        () async {
       final container = createTestProviderContainer();
-      
-      final recordTransactionUseCase = container.read(recordTransactionUseCaseProvider);
+
+      final recordTransactionUseCase =
+          container.read(recordTransactionUseCaseProvider);
 
       await expectLater(
         recordTransactionUseCase.execute(

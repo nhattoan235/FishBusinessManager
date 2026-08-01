@@ -5,7 +5,8 @@ import '../tables/app_settings_table.dart';
 part 'settings_dao.g.dart';
 
 @DriftAccessor(tables: [AppSettings])
-class SettingsDao extends DatabaseAccessor<AppDatabase> with _$SettingsDaoMixin {
+class SettingsDao extends DatabaseAccessor<AppDatabase>
+    with _$SettingsDaoMixin {
   SettingsDao(super.db);
 
   Future<AppSettingData> getSettings() async {
@@ -19,12 +20,14 @@ class SettingsDao extends DatabaseAccessor<AppDatabase> with _$SettingsDaoMixin 
       autoBackup: false,
       backupInterval: 24,
       keepBackupDays: 30,
+      backupTransactionThreshold: 20,
+      transactionsSinceBackup: 0,
       useGoogleDrive: false,
       updatedAt: DateTime.now(),
       useBoldFont: false,
     );
   }
-  
+
   Stream<AppSettingData> watchSettings() {
     return select(appSettings).watchSingleOrNull().map((settings) {
       if (settings != null) return settings;
@@ -35,12 +38,15 @@ class SettingsDao extends DatabaseAccessor<AppDatabase> with _$SettingsDaoMixin 
         autoBackup: false,
         backupInterval: 24,
         keepBackupDays: 30,
+        backupTransactionThreshold: 20,
+        transactionsSinceBackup: 0,
         useGoogleDrive: false,
         updatedAt: DateTime.now(),
         useBoldFont: false,
       );
     });
   }
-  
-  Future<bool> updateSettings(AppSettingsCompanion settings) => update(appSettings).replace(settings);
+
+  Future<bool> updateSettings(AppSettingsCompanion settings) =>
+      update(appSettings).replace(settings);
 }

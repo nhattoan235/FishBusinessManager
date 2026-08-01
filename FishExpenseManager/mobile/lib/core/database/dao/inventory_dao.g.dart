@@ -13,4 +13,26 @@ mixin _$InventoryDaoMixin on DatabaseAccessor<AppDatabase> {
   $SaleDocumentsTable get saleDocuments => attachedDatabase.saleDocuments;
   $InventoryEntriesTable get inventoryEntries =>
       attachedDatabase.inventoryEntries;
+  InventoryDaoManager get managers => InventoryDaoManager(this);
+}
+
+class InventoryDaoManager {
+  final _$InventoryDaoMixin _db;
+  InventoryDaoManager(this._db);
+  $$ProductCategoriesTableTableManager get productCategories =>
+      $$ProductCategoriesTableTableManager(
+          _db.attachedDatabase, _db.productCategories);
+  $$UnitsTableTableManager get units =>
+      $$UnitsTableTableManager(_db.attachedDatabase, _db.units);
+  $$ProductsTableTableManager get products =>
+      $$ProductsTableTableManager(_db.attachedDatabase, _db.products);
+  $$SuppliersTableTableManager get suppliers =>
+      $$SuppliersTableTableManager(_db.attachedDatabase, _db.suppliers);
+  $$CustomersTableTableManager get customers =>
+      $$CustomersTableTableManager(_db.attachedDatabase, _db.customers);
+  $$SaleDocumentsTableTableManager get saleDocuments =>
+      $$SaleDocumentsTableTableManager(_db.attachedDatabase, _db.saleDocuments);
+  $$InventoryEntriesTableTableManager get inventoryEntries =>
+      $$InventoryEntriesTableTableManager(
+          _db.attachedDatabase, _db.inventoryEntries);
 }

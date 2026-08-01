@@ -21,6 +21,8 @@ class TransactionRepositoryImpl implements TransactionRepository {
     query
       ..orderBy([
         (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
+        (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+        (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
       ])
       ..where((t) {
         Expression<bool> condition = const Constant(true);

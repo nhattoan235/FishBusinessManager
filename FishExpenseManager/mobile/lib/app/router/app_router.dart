@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/transactions/presentation/screens/transaction_detail_screen.dart';
 import '../../features/transactions/presentation/screens/transaction_list_screen.dart';
 import '../../features/transactions/presentation/screens/add_transaction_screen.dart';
 import '../../features/customers/presentation/screens/customer_list_screen.dart';
@@ -11,6 +12,7 @@ import '../../features/customers/presentation/screens/customer_detail_screen.dar
 import '../../features/sales/presentation/screens/sale_screen.dart';
 import '../../features/debts/presentation/screens/debt_list_screen.dart';
 import '../../features/debts/presentation/screens/collect_debt_screen.dart';
+import '../../features/debts/presentation/screens/debt_detail_screen.dart';
 import '../../features/settings/presentation/screens/more_screen.dart';
 import '../../features/reports/presentation/screens/report_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
@@ -55,6 +57,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'add',
                     builder: (context, state) => const AddTransactionScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return TransactionDetailScreen(transactionId: id);
+                    },
                   ),
                 ],
               ),
@@ -123,6 +132,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final customerId = int.parse(state.pathParameters['customerId']!);
           return CollectDebtScreen(customerId: customerId);
+        },
+      ),
+      GoRoute(
+        path: '/debts/detail/:customerId',
+        builder: (context, state) {
+          final customerId = int.parse(state.pathParameters['customerId']!);
+          return DebtDetailScreen(customerId: customerId);
         },
       ),
       // --- Phase 3 Routes ---

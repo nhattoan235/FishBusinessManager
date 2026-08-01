@@ -5,8 +5,68 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/database/providers/database_provider.dart';
+import 'package:drift/drift.dart' as drift;
 import '../../application/customer_provider.dart';
 import '../../../debts/application/debt_provider.dart';
+
+// --- Local Provider cho Lịch sử ---
+class CustomerHistoryInfo {
+  final List<SaleHistoryItem> purchases;
+  final List<PaymentHistoryItem> payments;
+
+  CustomerHistoryInfo(this.purchases, this.payments);
+}
+
+class SaleHistoryItem {
+  final DateTime date;
+  final int totalAmount;
+  final int paidAmount;
+  
+  SaleHistoryItem(this.date, this.totalAmount, this.paidAmount);
+}
+
+class PaymentHistoryItem {
+  final DateTime date;
+  final int amount;
+  
+  PaymentHistoryItem(this.date, this.amount);
+}
+
+final customerHistoryProvider = StreamProvider.family<CustomerHistoryInfo, int>((ref, customerId) async* {
+  final db = ref.watch(databaseProvider);
+
+  // Watch sales to trigger updates
+  final salesStream = (db.select(db.saleDocuments)
+        ..where((t) => t.customerId.equals(customerId))
+        ..orderBy([(t) => drift.OrderingTerm(expression: t.saleDate, mode: drift.OrderingMode.desc)]))
+      .watch();
+
+  // Combine streams
+  await for (final _ in salesStream) {
+    try {
+      final sales = await (db.select(db.saleDocuments)
+            ..where((t) => t.customerId.equals(customerId))
+            ..orderBy([(t) => drift.OrderingTerm(expression: t.saleDate, mode: drift.OrderingMode.desc)]))
+          .get();
+
+      final txs = await (db.select(db.transactions)
+            ..orderBy([(t) => drift.OrderingTerm(expression: t.date, mode: drift.OrderingMode.desc)]))
+          .get();
+
+      final purchaseItems = sales.map((s) => SaleHistoryItem(s.saleDate, s.totalAmount, s.paidAmount)).toList();
+      
+      final paymentItems = txs
+          .where((t) => t.type == 'Thu nợ' && t.referenceId == customerId.toString())
+          .map((t) => PaymentHistoryItem(t.date, t.amount.toInt()))
+          .toList();
+
+      yield CustomerHistoryInfo(purchaseItems, paymentItems);
+    } catch (e) {
+      yield CustomerHistoryInfo([], []);
+    }
+  }
+});
 
 class CustomerDetailScreen extends ConsumerWidget {
   final int customerId;
@@ -17,6 +77,7 @@ class CustomerDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final customersAsync = ref.watch(customersProvider);
     final debtsAsync = ref.watch(debtListProvider);
+    final historyAsync = ref.watch(customerHistoryProvider(customerId));
 
     return customersAsync.when(
       data: (customers) {
@@ -28,12 +89,15 @@ class CustomerDetailScreen extends ConsumerWidget {
           );
         }
 
-        // Find debt for this customer
+        // Safely calculate debt balance
         double debtBalance = 0;
-        debtsAsync.whenData((debts) {
-          final found = debts.where((d) => d.customerId == customerId).firstOrNull;
-          if (found != null) debtBalance = found.balance;
-        });
+        final debtsData = debtsAsync.valueOrNull;
+        if (debtsData != null) {
+          final found = debtsData.where((d) => d.customerId == customerId).firstOrNull;
+          if (found != null) {
+            debtBalance = found.balance;
+          }
+        }
 
         return Scaffold(
           appBar: AppBar(
@@ -49,116 +113,152 @@ class CustomerDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Customer Info Card
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Thông tin khách hàng', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const Divider(),
-                        _infoRow(Icons.person, 'Tên', customer.name),
-                        _infoRow(Icons.phone, 'SĐT', customer.phone ?? 'Chưa có'),
-                        _infoRow(Icons.location_on, 'Địa chỉ', customer.address ?? 'Chưa có'),
-                        _infoRow(Icons.note, 'Ghi chú', customer.note ?? 'Chưa có'),
-                        _infoRow(Icons.calendar_today, 'Ngày tạo', DateFormatter.formatDate(customer.createdAt)),
-                      ],
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Customer Info Card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Thông tin khách hàng', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const Divider(),
+                          _infoRow(Icons.person, 'Tên', customer.name),
+                          _infoRow(Icons.phone, 'SĐT', (customer.phone?.trim().isNotEmpty == true) ? customer.phone! : 'Chưa có'),
+                          _infoRow(Icons.location_on, 'Địa chỉ', (customer.address?.trim().isNotEmpty == true) ? customer.address! : 'Chưa có'),
+                          _infoRow(Icons.note, 'Ghi chú', (customer.note?.trim().isNotEmpty == true) ? customer.note! : 'Chưa có'),
+                          _infoRow(Icons.calendar_today, 'Ngày tạo', DateFormatter.formatDate(customer.createdAt)),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
 
-                // Debt summary
-                Card(
-                  color: debtBalance > 0 ? AppColors.error.withValues(alpha: 0.05) : AppColors.success.withValues(alpha: 0.05),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Công nợ hiện tại', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              CurrencyFormatter.format(debtBalance),
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: debtBalance > 0 ? AppColors.error : AppColors.success,
-                              ),
+                  // Debt summary
+                  Card(
+                    color: debtBalance > 0 ? AppColors.error.withOpacity(0.05) : AppColors.success.withOpacity(0.05),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Công nợ hiện tại', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  CurrencyFormatter.format(debtBalance),
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: debtBalance > 0 ? AppColors.error : AppColors.success,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        if (debtBalance > 0)
-                          ElevatedButton.icon(
-                            onPressed: () => context.push('/debts/collect/$customerId'),
-                            icon: const Icon(Icons.payments, color: Colors.white),
-                            label: const Text('Thu Nợ', style: TextStyle(color: Colors.white)),
-                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
                           ),
-                      ],
+                          if (debtBalance > 0)
+                            ElevatedButton.icon(
+                              onPressed: () => context.push('/debts/collect/$customerId'),
+                              icon: const Icon(Icons.payments, color: Colors.white),
+                              label: const Text('Thu Nợ', style: TextStyle(color: Colors.white)),
+                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
 
-                // Placeholder for purchase history & payment history
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // History
+                  historyAsync.when(
+                    data: (info) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text('Lịch sử mua hàng', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        const Divider(),
-                        const Center(
+                        // Purchase history
+                        Card(
                           child: Padding(
-                            padding: EdgeInsets.all(AppSpacing.lg),
-                            child: Text('Chưa có lịch sử mua hàng', style: TextStyle(color: Colors.grey)),
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Lịch sử mua hàng', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                const Divider(),
+                                if (info.purchases.isEmpty)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(AppSpacing.lg),
+                                      child: Text('Chưa có lịch sử mua hàng', style: TextStyle(color: Colors.grey)),
+                                    ),
+                                  )
+                                else
+                                  ...info.purchases.take(5).map((p) => ListTile(
+                                        contentPadding: EdgeInsets.zero,
+                                        leading: const Icon(Icons.shopping_cart_checkout, color: AppColors.primary),
+                                        title: Text(DateFormatter.formatDate(p.date)),
+                                        subtitle: Text('Đã trả: ${CurrencyFormatter.format(p.paidAmount.toDouble())}'),
+                                        trailing: Text(CurrencyFormatter.format(p.totalAmount.toDouble()), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      )),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Payment history
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Lịch sử thanh toán (Thu nợ)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                const Divider(),
+                                if (info.payments.isEmpty)
+                                  const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(AppSpacing.lg),
+                                      child: Text('Chưa có lịch sử thanh toán', style: TextStyle(color: Colors.grey)),
+                                    ),
+                                  )
+                                else
+                                  ...info.payments.take(5).map((p) => ListTile(
+                                        contentPadding: EdgeInsets.zero,
+                                        leading: const Icon(Icons.payments, color: AppColors.success),
+                                        title: Text(DateFormatter.formatDateTime(p.date)),
+                                        trailing: Text('+${CurrencyFormatter.format(p.amount.toDouble())}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
+                                      )),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
+                    loading: () => const Center(child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    )),
+                    error: (err, stack) => Center(child: Text('Lỗi tải lịch sử: $err')),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Lịch sử thanh toán', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        const Divider(),
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppSpacing.lg),
-                            child: Text('Chưa có lịch sử thanh toán', style: TextStyle(color: Colors.grey)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
       },
       loading: () => Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(title: const Text('Đang tải...')),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (err, stack) => Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(title: const Text('Lỗi')),
         body: Center(child: Text('Lỗi: $err')),
       ),
     );
@@ -168,6 +268,7 @@ class CustomerDetailScreen extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: Colors.grey),
           const SizedBox(width: AppSpacing.sm),

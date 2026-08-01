@@ -157,6 +157,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: ListTile(
+        onTap: () => context.push('/transactions/${tx.id}'),
         leading: CircleAvatar(
           backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(icon, color: color),
@@ -170,10 +171,17 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
             Text(DateFormatter.formatDateTime(tx.date)),
           ],
         ),
-        trailing: Text(
-          CurrencyFormatter.formatWithSign(tx.amount, isIncome: tx.isIncome),
-          style: TextStyle(
-              fontWeight: FontWeight.bold, color: color, fontSize: 16),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              CurrencyFormatter.formatWithSign(tx.amount, isIncome: tx.isIncome),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, color: color, fontSize: 16),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
         ),
       ),
     );

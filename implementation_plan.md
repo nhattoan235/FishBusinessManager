@@ -137,11 +137,11 @@ feature/
 **Mục tiêu**: Thiết lập toàn bộ cơ sở hạ tầng, database, navigation
 
 #### 1.1 Cấu hình dự án
-- [ ] Cập nhật `pubspec.yaml`: tên package, thêm tất cả dependencies
-- [ ] Tạo cấu trúc thư mục `lib/`
+- [x] Cập nhật `pubspec.yaml`: tên package, thêm tất cả dependencies
+- [x] Tạo cấu trúc thư mục `lib/`
 
 #### 1.2 Database Layer (Drift)
-- [ ] Tạo 15 table definitions theo thiết kế `04_Data_Dictionary_and_Database_Design.md`:
+- [x] Tạo 15 table definitions theo thiết kế `04_Data_Dictionary_and_Database_Design.md`:
   - `customers_table.dart`
   - `suppliers_table.dart`
   - `product_categories_table.dart`
@@ -157,26 +157,26 @@ feature/
   - `backup_logs_table.dart`
   - `app_logs_table.dart`
   - `database_info_table.dart`
-- [ ] Tạo `app_database.dart` (khai báo tất cả bảng)
-- [ ] Tạo DAOs cho từng bảng (CustomerDao, SaleDao, InventoryDao...)
-- [ ] Cấu hình Migration v1
-- [ ] Tạo Seed Data (danh mục mặc định, đơn vị kg, sản phẩm Chứng nước)
-- [ ] Chạy `build_runner` để generate code
+- [x] Tạo `app_database.dart` (khai báo tất cả bảng)
+- [x] Tạo DAOs cho từng bảng (CustomerDao, SaleDao, InventoryDao...)
+- [x] Cấu hình Migration v1
+- [x] Tạo Seed Data (danh mục mặc định, đơn vị kg, sản phẩm Chứng nước)
+- [x] Chạy `build_runner` để generate code
 
 #### 1.3 App Theme & Design System
-- [ ] `AppColors` — màu xanh cho Thu, đỏ cho Chi, warning cam
-- [ ] `AppTypography` — font Roboto, size tối thiểu 16sp
-- [ ] `AppSpacing`, `AppRadius`, `AppDurations`
-- [ ] `AppTheme` — Material 3
+- [x] `AppColors` — màu xanh cho Thu, đỏ cho Chi, warning cam
+- [x] `AppTypography` — font Roboto, size tối thiểu 16sp
+- [x] `AppSpacing`, `AppRadius`, `AppDurations`
+- [x] `AppTheme` — Material 3
 
 #### 1.4 Navigation
-- [ ] Cấu hình GoRouter: 5 tab (Trang chủ, Thu chi, Bán hàng, Công nợ, Khác)
-- [ ] Bottom Navigation Bar
+- [x] Cấu hình GoRouter: 5 tab (Trang chủ, Thu chi, Bán hàng, Công nợ, Khác)
+- [x] Bottom Navigation Bar
 
 #### 1.5 Core Widgets
-- [ ] `PrimaryButton`, `AppCard`, `ConfirmDialog`, `EmptyView`, `LoadingView`
-- [ ] `CurrencyFormatter` (định dạng `2.350.000 đ`)
-- [ ] `DateFormatter` (định dạng `dd/MM/yyyy`, `HH:mm`)
+- [x] `PrimaryButton`, `AppCard`, `ConfirmDialog`, `EmptyView`, `LoadingView`
+- [x] `CurrencyFormatter` (định dạng `2.350.000 đ`)
+- [x] `DateFormatter` (định dạng `dd/MM/yyyy`, `HH:mm`)
 
 **Output**: Ứng dụng chạy được, bottom nav hoạt động, database khởi tạo thành công với seed data.
 
@@ -187,31 +187,31 @@ feature/
 **Mục tiêu**: Hoàn thiện các màn hình và nghiệp vụ quan trọng nhất
 
 #### 2.1 Dashboard (SCR-001)
-- [ ] Domain: `DashboardSummary` entity
-- [ ] Repository: tổng hợp tiền hiện có, thu/chi hôm nay, tổng nợ, tồn kho
-- [ ] Provider: `dashboardProvider`
-- [ ] UI: 5 card (tiền hiện có, thu hôm nay, chi hôm nay, khách còn nợ, tồn kho)
-- [ ] 3 nút thao tác nhanh: Bán hàng, Thu tiền, Thêm khoản chi
+- [x] Domain: `DashboardSummary` entity
+- [x] Repository: tổng hợp tiền hiện có, thu/chi hôm nay, tổng nợ, tồn kho
+- [x] Provider: `dashboardProvider`
+- [x] UI: 5 card (tiền hiện có, thu hôm nay, chi hôm nay, khách còn nợ, tồn kho)
+- [x] 3 nút thao tác nhanh: Bán hàng, Thu tiền, Thêm khoản chi
 
 #### 2.2 Thu Chi (SCR-002, SCR-003, SCR-004)
-- [ ] Domain: `Transaction` entity, `TransactionRepository` interface
-- [ ] Use Cases: `RecordIncomeUseCase`, `RecordExpenseUseCase`
-- [ ] Repository Implementation: `TransactionRepositoryImpl`
-- [ ] UI danh sách: search, filter (hôm nay/tuần/tháng/khoảng ngày), card xanh/đỏ
-- [ ] UI thêm khoản thu: dropdown loại thu, số tiền, ngày, nội dung
-- [ ] UI thêm khoản chi: dropdown loại chi, số tiền, ngày, nội dung
-- [ ] Validation: số tiền > 0, bắt buộc chọn loại
+- [x] Domain: `Transaction` entity, `TransactionRepository` interface
+- [x] Use Cases: `RecordIncomeUseCase`, `RecordExpenseUseCase`
+- [x] Repository Implementation: `TransactionRepositoryImpl`
+- [x] UI danh sách: search, filter (hôm nay/tuần/tháng/khoảng ngày), card xanh/đỏ
+- [x] UI thêm khoản thu: dropdown loại thu, số tiền, ngày, nội dung
+- [x] UI thêm khoản chi: dropdown loại chi, số tiền, ngày, nội dung
+- [x] Validation: số tiền > 0, bắt buộc chọn loại
 
 #### 2.3 Khách hàng (SCR-006, SCR-007)
-- [ ] Domain: `Customer` entity, `CustomerRepository` interface
-- [ ] Use Cases: `CreateCustomerUseCase`, `UpdateCustomerUseCase`, `DeactivateCustomerUseCase`
-- [ ] Repository: CRUD + soft delete
-- [ ] UI danh sách: tên, SĐT, số nợ; tìm kiếm; thêm mới
-- [ ] UI chi tiết: info khách + lịch sử mua + lịch sử thanh toán + nút Thu tiền
+- [x] Domain: `Customer` entity, `CustomerRepository` interface
+- [x] Use Cases: `CreateCustomerUseCase`, `UpdateCustomerUseCase`, `DeactivateCustomerUseCase`
+- [x] Repository: CRUD + soft delete
+- [x] UI danh sách: tên, SĐT, số nợ; tìm kiếm; thêm mới
+- [x] UI chi tiết: info khách + lịch sử mua + lịch sử thanh toán + nút Thu tiền
 
 #### 2.4 Bán hàng (SCR-005)
-- [ ] Domain: `Sale`, `SaleItem` entities
-- [ ] Use Case: `CreateSaleUseCase` (atomic database transaction)
+- [x] Domain: `Sale`, `SaleItem` entities
+- [x] Use Case: `CreateSaleUseCase` (atomic database transaction)
   - Tạo `sale_documents`
   - Tạo `sale_items`
   - Ghi `inventory_entries` (sale)
@@ -219,14 +219,14 @@ feature/
   - Ghi `debt_transactions` (nếu còn nợ)
   - Cập nhật `customer_balances`
   - Rollback nếu có lỗi
-- [ ] Kiểm tra tồn kho trước khi lưu (BR-802)
-- [ ] UI: chọn khách, chọn SP, nhập SL + đơn giá (auto-fill), tổng tiền, tiền trả, còn nợ
+- [x] Kiểm tra tồn kho trước khi lưu (BR-802)
+- [x] UI: chọn khách, chọn SP, nhập SL + đơn giá (auto-fill), tổng tiền, tiền trả, còn nợ
 
 #### 2.5 Công nợ (SCR-011)
-- [ ] Domain: `CustomerBalance`, `DebtTransaction` entities
-- [ ] Use Case: `CollectDebtUseCase` (tạo giao dịch Thu + cập nhật số dư)
-- [ ] UI danh sách: tên + số nợ + ngày gần nhất; filter (còn nợ / đã TT)
-- [ ] UI thu tiền: chọn khách, nhập số tiền (không vượt số nợ - BR-503)
+- [x] Domain: `CustomerBalance`, `DebtTransaction` entities
+- [x] Use Case: `CollectDebtUseCase` (tạo giao dịch Thu + cập nhật số dư)
+- [x] UI danh sách: tên + số nợ + ngày gần nhất; filter (còn nợ / đã TT)
+- [x] UI thu tiền: chọn khách, nhập số tiền (không vượt số nợ - BR-503)
 
 **Output**: Có thể dùng để ghi nhận bán hàng, thu chi, xem công nợ hằng ngày.
 
@@ -237,34 +237,34 @@ feature/
 **Mục tiêu**: Hoàn thiện tất cả màn hình còn lại
 
 #### 3.1 Người bán / Nhà cung cấp
-- [ ] Màn hình danh sách nhà cung cấp
-- [ ] CRUD nhà cung cấp (BR-201 → BR-203)
+- [x] Màn hình danh sách nhà cung cấp
+- [x] CRUD nhà cung cấp (BR-201 → BR-203)
 
 #### 3.2 Sản phẩm (SCR-008, SCR-009)
-- [ ] Danh mục sản phẩm, đơn vị tính
-- [ ] CRUD sản phẩm (tuân thủ BR-301 → BR-304)
-- [ ] Chi tiết: lịch sử nhập/bán, tồn kho hiện tại
+- [x] Danh mục sản phẩm, đơn vị tính
+- [x] CRUD sản phẩm (tuân thủ BR-301 → BR-304)
+- [x] Chi tiết: lịch sử nhập/bán, tồn kho hiện tại
 
 #### 3.3 Kho hàng (SCR-010)
-- [ ] Tồn kho tính từ `inventory_entries` (Ledger Pattern)
-- [ ] Nhập kho: từ nhà cung cấp (`purchase`) và thu hoạch (`harvest`)
-- [ ] Điều chỉnh kho (`adjustment`)
-- [ ] Lịch sử biến động kho
+- [x] Tồn kho tính từ `inventory_entries` (Ledger Pattern)
+- [x] Nhập kho: từ nhà cung cấp (`purchase`) và thu hoạch (`harvest`)
+- [x] Điều chỉnh kho (`adjustment`)
+- [x] Lịch sử biến động kho
 
 #### 3.4 Cài đặt (SCR-013)
-- [ ] Cỡ chữ (font scale)
-- [ ] Sao lưu tự động (toggle)
-- [ ] Khoảng thời gian sao lưu
-- [ ] Thông tin ứng dụng, phiên bản Database
-- [ ] Thông tin về ứng dụng
+- [x] Cỡ chữ (font scale)
+- [x] Sao lưu tự động (toggle)
+- [x] Khoảng thời gian sao lưu
+- [x] Thông tin ứng dụng, phiên bản Database
+- [x] Thông tin về ứng dụng
 
 #### 3.5 Backup & Restore — Local (SCR-012)
-- [ ] Tạo file backup: copy `.sqlite` → nén `.zip` → checksum SHA-256
-- [ ] Metadata: version, thời gian, số bản ghi
-- [ ] Restore: kiểm tra checksum → backup hiện tại → restore
-- [ ] Lưu log backup vào `backup_logs`
-- [ ] UI: danh sách backup local, nút Sao lưu ngay, Khôi phục
-- [ ] Chính sách giữ 10 bản local
+- [x] Tạo file backup: copy `.sqlite` → nén `.zip` → checksum SHA-256
+- [x] Metadata: version, thời gian, số bản ghi
+- [x] Restore: kiểm tra checksum → backup hiện tại → restore
+- [x] Lưu log backup vào `backup_logs`
+- [x] UI: danh sách backup local, nút Sao lưu ngay, Khôi phục
+- [x] Chính sách giữ 10 bản local
 
 **Output**: Ứng dụng hoàn chỉnh, đủ để sử dụng hằng ngày, có backup local.
 
@@ -275,25 +275,25 @@ feature/
 **Mục tiêu**: Tính năng nâng cao, an toàn dữ liệu cao hơn
 
 #### 4.1 Google Drive Backup
-- [ ] Google Sign In
-- [ ] Upload backup lên Google Drive
-- [ ] Download backup từ Google Drive để restore
-- [ ] Hàng chờ upload khi không có mạng
-- [ ] Chính sách giữ 30 bản trên Drive
+- [x] Google Sign In
+- [x] Upload backup lên Google Drive
+- [x] Download backup từ Google Drive để restore
+- [x] Hàng chờ upload khi không có mạng
+- [x] Chính sách giữ 30 bản trên Drive
 
 #### 4.2 Database Encryption (SQLCipher)
-- [ ] Tích hợp `sqlcipher_flutter_libs`
-- [ ] Lưu key trong `flutter_secure_storage`
-- [ ] Encrypt `.sqlite` file
+- [x] Tích hợp `sqlcipher_flutter_libs`
+- [x] Lưu key trong `flutter_secure_storage`
+- [x] Encrypt `.sqlite` file
 
 #### 4.3 Sao lưu tự động
-- [ ] Background backup khi thoát app
-- [ ] Backup sau N giao dịch (cài đặt được)
-- [ ] Background task (WorkManager / Isolate)
+- [x] Background backup khi thoát app
+- [x] Backup sau N giao dịch (cài đặt được)
+- [x] Background task (WorkManager / Isolate)
 
 #### 4.4 Báo cáo nâng cao
-- [ ] Thống kê theo tháng (tổng thu, tổng chi, lãi/lỗ)
-- [ ] Biểu đồ đơn giản
+- [x] Thống kê theo tháng (tổng thu, tổng chi, lãi/lỗ)
+- [x] Biểu đồ đơn giản
 
 **Output**: Ứng dụng production-ready, dữ liệu an toàn tối đa.
 

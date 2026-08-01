@@ -8,7 +8,12 @@ class AppSettings extends Table {
   BoolColumn get autoBackup => boolean().withDefault(const Constant(true))();
   IntColumn get backupInterval => integer().withDefault(const Constant(24))();
   IntColumn get keepBackupDays => integer().withDefault(const Constant(30))();
-  BoolColumn get useGoogleDrive => boolean().withDefault(const Constant(false))();
+  IntColumn get backupTransactionThreshold =>
+      integer().withDefault(const Constant(20))();
+  IntColumn get transactionsSinceBackup =>
+      integer().withDefault(const Constant(0))();
+  BoolColumn get useGoogleDrive =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get useBoldFont => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 

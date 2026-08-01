@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/dao/transaction_dao.dart';
@@ -23,31 +22,9 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Stream<List<TransactionEntity>> watchTransactions() {
-    if (kIsWeb) {
-      return Stream.value([
-        TransactionEntity(
-          uuid: 'mock-1',
-          amount: 5000000,
-          isIncome: true,
-          type: 'Thu nợ',
-          description: 'Mẫu: Khách trả nợ (Bạn đang chạy Web)',
-          date: DateTime.now(),
-          createdAt: DateTime.now(),
-        ),
-        TransactionEntity(
-          uuid: 'mock-2',
-          amount: 1200000,
-          isIncome: false,
-          type: 'Chi phí',
-          description: 'Mẫu: Trả tiền thức ăn cá (Bạn đang chạy Web)',
-          date: DateTime.now().subtract(const Duration(days: 1)),
-          createdAt: DateTime.now(),
-        )
-      ]);
-    }
     return _dao.watchAllTransactions().map(
-      (list) => list.map(_mapToEntity).toList(),
-    );
+          (list) => list.map(_mapToEntity).toList(),
+        );
   }
 
   @override

@@ -50,22 +50,27 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
 
   void _save() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     // Nếu chưa chọn ID mà có text, hỏi tạo mới
     if (_selectedCustomerId == null && _customerSearchText.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Khách hàng mới'),
-          content: Text('"$_customerSearchText" chưa có trong hệ thống.\nBạn có muốn tạo khách hàng này không?'),
+          content: Text(
+              '"$_customerSearchText" chưa có trong hệ thống.\nBạn có muốn tạo khách hàng này không?'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Không')),
-            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Đúng')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Không')),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Đúng')),
           ],
         ),
       );
       if (confirm != true) return;
-      
+
       try {
         final newCustomer = CustomerEntity(
           uuid: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -75,21 +80,26 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
           note: '',
           createdAt: DateTime.now(),
         );
-        final createdId = await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
+        final createdId =
+            await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
         setState(() => _selectedCustomerId = createdId);
         // refresh list to get new customer (StreamProvider usually auto-updates, but just in case)
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tạo KH: $e')));
+        if (mounted)
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Lỗi tạo KH: $e')));
         return;
       }
     }
 
     if (_selectedCustomerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn hoặc nhập khách hàng')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng chọn hoặc nhập khách hàng')));
       return;
     }
     if (_selectedProduct == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn sản phẩm')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng chọn sản phẩm')));
       return;
     }
 
@@ -99,23 +109,24 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     final total = qty * price;
 
     if (qty <= 0 || price <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Số lượng và đơn giá phải > 0')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Số lượng và đơn giá phải > 0')));
       return;
     }
     if (paid > total) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tiền trả không được lớn hơn tổng tiền')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Tiền trả không được lớn hơn tổng tiền')));
       return;
     }
-    
+
     // Kiểm tra tồn kho (BR-005)
     final currentStock = _selectedProduct!.currentStock ?? 0;
     if (qty > currentStock) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi: Số lượng bán ($qty) vượt quá tồn kho hiện tại ($currentStock)'),
-          backgroundColor: AppColors.error,
-        )
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            'Lỗi: Số lượng bán ($qty) vượt quá tồn kho hiện tại ($currentStock)'),
+        backgroundColor: AppColors.error,
+      ));
       return;
     }
 
@@ -136,7 +147,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
         ],
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã lưu phiếu bán hàng!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã lưu phiếu bán hàng!')));
         // Reset form
         _qtyController.clear();
         _priceController.clear();
@@ -152,7 +164,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     }
   }
@@ -182,7 +195,10 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
             children: [
               const Text(
                 'Tạo Phiếu Bán Hàng',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary),
               ),
               const SizedBox(height: AppSpacing.lg),
 
@@ -195,8 +211,12 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                       if (textEditingValue.text.isEmpty) {
                         return const Iterable<CustomerEntity>.empty();
                       }
-                      final query = textEditingValue.text.toLowerCase().withoutDiacritics;
-                      return customers.where((c) => c.name.toLowerCase().withoutDiacritics.contains(query));
+                      final query =
+                          textEditingValue.text.toLowerCase().withoutDiacritics;
+                      return customers.where((c) => c.name
+                          .toLowerCase()
+                          .withoutDiacritics
+                          .contains(query));
                     },
                     onSelected: (c) {
                       setState(() {
@@ -204,12 +224,19 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         _customerSearchText = c.name;
                       });
                     },
-                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onFieldSubmitted) {
                       if (_autocompleteController != controller) {
                         _autocompleteController = controller;
                         controller.addListener(() {
                           _customerSearchText = controller.text;
-                          final match = customers.where((c) => c.name.toLowerCase().withoutDiacritics == controller.text.toLowerCase().withoutDiacritics).firstOrNull;
+                          final match = customers
+                              .where((c) =>
+                                  c.name.toLowerCase().withoutDiacritics ==
+                                  controller.text
+                                      .toLowerCase()
+                                      .withoutDiacritics)
+                              .firstOrNull;
                           _selectedCustomerId = match?.id;
                         });
                       }
@@ -217,11 +244,14 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         controller: controller,
                         focusNode: focusNode,
                         decoration: const InputDecoration(
-                          labelText: 'Khách Hàng (Tìm hoặc nhập mới) *',
+                          labelText: 'Khách hàng *',
+                          hintText: 'Tìm hoặc nhập khách hàng mới',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.person),
                         ),
-                        validator: (val) => val == null || val.isEmpty ? 'Vui lòng chọn hoặc nhập khách hàng' : null,
+                        validator: (val) => val == null || val.isEmpty
+                            ? 'Vui lòng chọn hoặc nhập khách hàng'
+                            : null,
                       );
                     },
                   );
@@ -234,8 +264,9 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               // Product selection
               productsAsync.when(
                 data: (products) {
-                  final activeProducts = products.where((p) => p.isActive).toList();
-                  
+                  final activeProducts =
+                      products.where((p) => p.isActive).toList();
+
                   if (activeProducts.isEmpty) {
                     return const InputDecorator(
                       decoration: InputDecoration(
@@ -243,7 +274,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.warning, color: AppColors.error),
                       ),
-                      child: Text('Chưa có sản phẩm nào. Vui lòng thêm sản phẩm.'),
+                      child:
+                          Text('Chưa có sản phẩm nào. Vui lòng thêm sản phẩm.'),
                     );
                   }
 
@@ -252,28 +284,50 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                       _onProductSelected(activeProducts.first);
                     });
                   }
-                  
+
                   final currentValue = _selectedProduct?.id;
 
                   // Always show dropdown
                   return DropdownButtonFormField<int>(
                     value: currentValue,
+                    isExpanded: true,
                     decoration: const InputDecoration(
-                      labelText: 'Chọn Sản Phẩm *',
+                      labelText: 'Sản phẩm *',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.inventory_2),
+                      isDense: true,
+                      constraints: BoxConstraints(minHeight: 64),
+                      contentPadding: EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.xs,
+                        AppSpacing.sm,
+                        AppSpacing.xs,
+                      ),
                     ),
-                    items: activeProducts.map((p) => DropdownMenuItem<int>(
-                      value: p.id, 
-                      child: Text('${p.name} (Tồn kho: ${p.currentStock ?? 0} ${p.unit?.symbol ?? ''})')
-                    )).toList(),
+                    itemHeight: 64,
+                    items: activeProducts
+                        .map((product) => DropdownMenuItem<int>(
+                              value: product.id,
+                              child: _ProductDropdownContent(
+                                product: product,
+                              ),
+                            ))
+                        .toList(),
+                    selectedItemBuilder: (context) => activeProducts
+                        .map((product) => _ProductDropdownContent(
+                              product: product,
+                              selected: true,
+                            ))
+                        .toList(),
                     onChanged: (id) {
                       if (id != null) {
-                        final product = activeProducts.firstWhere((p) => p.id == id);
+                        final product =
+                            activeProducts.firstWhere((p) => p.id == id);
                         _onProductSelected(product);
                       }
                     },
-                    validator: (val) => val == null ? 'Vui lòng chọn sản phẩm' : null,
+                    validator: (val) =>
+                        val == null ? 'Vui lòng chọn sản phẩm' : null,
                   );
                 },
                 loading: () => const LinearProgressIndicator(),
@@ -286,7 +340,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 controller: _qtyController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Số Lượng (${_selectedProduct?.unit?.symbol ?? 'kg'}) *',
+                  labelText:
+                      'Số Lượng (${_selectedProduct?.unit?.symbol ?? 'kg'}) *',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.scale),
                 ),
@@ -324,13 +379,21 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                 color: AppColors.primary.withValues(alpha: 0.05),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
                     children: [
-                      const Text('Tổng tiền:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      const Text('Tổng tiền:',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
                       Text(
                         CurrencyFormatter.format(_totalAmount),
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary),
+                        style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary),
                       ),
                     ],
                   ),
@@ -357,13 +420,21 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                   color: AppColors.error.withValues(alpha: 0.05),
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.xs,
                       children: [
-                        const Text('Còn nợ:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Text('Còn nợ:',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
                         Text(
                           CurrencyFormatter.format(_debtAmount),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.error),
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.error),
                         ),
                       ],
                     ),
@@ -374,7 +445,8 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               ElevatedButton.icon(
                 onPressed: _save,
                 icon: const Icon(Icons.check, color: Colors.white),
-                label: const Text('Lưu Phiếu Bán Hàng', style: TextStyle(color: Colors.white, fontSize: 16)),
+                label: const Text('Lưu Phiếu Bán Hàng',
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -382,6 +454,56 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductDropdownContent extends StatelessWidget {
+  final ProductEntity product;
+  final bool selected;
+
+  const _ProductDropdownContent({
+    required this.product,
+    this.selected = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final stock = product.currentStock ?? 0;
+    final stockText =
+        stock.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+    final unit = product.unit?.symbol ?? '';
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: product.name,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextSpan(
+                text: '\nTồn kho: $stockText $unit',
+                style: TextStyle(
+                  fontSize: selected ? 12 : 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          textScaler: TextScaler.noScaling,
+          maxLines: 2,
+          overflow: TextOverflow.clip,
         ),
       ),
     );

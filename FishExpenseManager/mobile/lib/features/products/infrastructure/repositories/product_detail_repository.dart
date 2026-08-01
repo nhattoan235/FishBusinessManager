@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
-import 'package:uuid/uuid.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/product_detail_entity.dart';
 
@@ -9,15 +7,14 @@ class ProductDetailRepository {
   ProductDetailRepository(this._db);
 
   Future<ProductDetailData> getProductDetail(int productId) async {
-    if (kIsWeb) return _getMockDetail(productId);
-
     // Tồn kho hiện tại
     final stockRows = await _db.customSelect(
       'SELECT COALESCE(SUM(quantity), 0.0) AS stock FROM inventory_entries WHERE product_id = ?',
       variables: [Variable.withInt(productId)],
       readsFrom: {_db.inventoryEntries},
     ).get();
-    final currentStock = (stockRows.first.data['stock'] as num?)?.toDouble() ?? 0.0;
+    final currentStock =
+        (stockRows.first.data['stock'] as num?)?.toDouble() ?? 0.0;
 
     // Lịch sử nhập kho (purchase + harvest + adjustment dương)
     final entryRows = await _db.customSelect(
@@ -84,43 +81,6 @@ class ProductDetailRepository {
       currentStock: currentStock,
       inventoryEntries: entries,
       saleHistory: sales,
-    );
-  }
-
-  ProductDetailData _getMockDetail(int productId) {
-    final now = DateTime.now();
-    return ProductDetailData(
-      currentStock: 320,
-      inventoryEntries: [
-        InventoryEntryItem(
-          entryType: 'purchase',
-          quantity: 200,
-          note: 'Mua từ chú Tư',
-          createdAt: now.subtract(const Duration(days: 2)),
-        ),
-        InventoryEntryItem(
-          entryType: 'harvest',
-          quantity: 150,
-          note: 'Thu hoạch khu B',
-          createdAt: now.subtract(const Duration(days: 5)),
-        ),
-      ],
-      saleHistory: [
-        SaleHistoryItem(
-          customerName: 'Anh Ba',
-          quantity: 10,
-          unitPrice: 25000,
-          subtotal: 250000,
-          saleDate: now.subtract(const Duration(days: 1)),
-        ),
-        SaleHistoryItem(
-          customerName: 'Chị Lan',
-          quantity: 20,
-          unitPrice: 25000,
-          subtotal: 500000,
-          saleDate: now.subtract(const Duration(days: 3)),
-        ),
-      ],
     );
   }
 }

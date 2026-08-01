@@ -12,7 +12,8 @@ class TransactionListScreen extends ConsumerStatefulWidget {
   const TransactionListScreen({super.key});
 
   @override
-  ConsumerState<TransactionListScreen> createState() => _TransactionListScreenState();
+  ConsumerState<TransactionListScreen> createState() =>
+      _TransactionListScreenState();
 }
 
 class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
@@ -32,30 +33,37 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         children: [
           // Search bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm giao dịch...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               ),
-              onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+              onChanged: (val) =>
+                  setState(() => _searchQuery = val.toLowerCase()),
             ),
           ),
           // Filter chips
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-            child: Row(
-              children: [
-                _buildFilterChip('Tất cả', 'all'),
-                const SizedBox(width: AppSpacing.xs),
-                _buildFilterChip('Hôm nay', 'today'),
-                const SizedBox(width: AppSpacing.xs),
-                _buildFilterChip('Tuần', 'week'),
-                const SizedBox(width: AppSpacing.xs),
-                _buildFilterChip('Tháng', 'month'),
-              ],
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  _buildFilterChip('Tất cả', 'all'),
+                  _buildFilterChip('Hôm nay', 'today'),
+                  _buildFilterChip('Tuần', 'week'),
+                  _buildFilterChip('Tháng', 'month'),
+                ],
+              ),
             ),
           ),
           // List
@@ -64,12 +72,15 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
               data: (transactions) {
                 final filtered = _applyFilters(transactions);
                 if (filtered.isEmpty) {
-                  return const Center(child: Text('Không có giao dịch phù hợp.'));
+                  return const Center(
+                      child: Text('Không có giao dịch phù hợp.'));
                 }
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   itemCount: filtered.length,
-                  itemBuilder: (context, index) => _buildTransactionItem(filtered[index]),
+                  itemBuilder: (context, index) =>
+                      _buildTransactionItem(filtered[index]),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -89,7 +100,11 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
   Widget _buildFilterChip(String label, String value) {
     final selected = _filterPeriod == value;
     return ChoiceChip(
-      label: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: selected ? Colors.white : Colors.black87)),
+      label: Text(label,
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: selected ? Colors.white : Colors.black87)),
       selected: selected,
       selectedColor: AppColors.primary,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -102,28 +117,33 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
 
     // Search filter
     if (_searchQuery.isNotEmpty) {
-      result = result.where((tx) =>
-        tx.type.toLowerCase().contains(_searchQuery) ||
-        tx.description.toLowerCase().contains(_searchQuery)
-      ).toList();
+      result = result
+          .where((tx) =>
+              tx.type.toLowerCase().contains(_searchQuery) ||
+              tx.description.toLowerCase().contains(_searchQuery))
+          .toList();
     }
 
     // Period filter
     final now = DateTime.now();
     switch (_filterPeriod) {
       case 'today':
-        result = result.where((tx) =>
-          tx.date.year == now.year && tx.date.month == now.month && tx.date.day == now.day
-        ).toList();
+        result = result
+            .where((tx) =>
+                tx.date.year == now.year &&
+                tx.date.month == now.month &&
+                tx.date.day == now.day)
+            .toList();
         break;
       case 'week':
         final weekAgo = now.subtract(const Duration(days: 7));
         result = result.where((tx) => tx.date.isAfter(weekAgo)).toList();
         break;
       case 'month':
-        result = result.where((tx) =>
-          tx.date.year == now.year && tx.date.month == now.month
-        ).toList();
+        result = result
+            .where(
+                (tx) => tx.date.year == now.year && tx.date.month == now.month)
+            .toList();
         break;
     }
 
@@ -141,7 +161,8 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
           backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(icon, color: color),
         ),
-        title: Text(tx.type, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title:
+            Text(tx.type, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -151,7 +172,8 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
         ),
         trailing: Text(
           CurrencyFormatter.formatWithSign(tx.amount, isIncome: tx.isIncome),
-          style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 16),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, color: color, fontSize: 16),
         ),
       ),
     );

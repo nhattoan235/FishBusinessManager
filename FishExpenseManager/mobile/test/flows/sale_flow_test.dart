@@ -6,7 +6,6 @@ import 'package:fish_business_manager/features/sales/application/sale_provider.d
 import 'package:fish_business_manager/features/sales/domain/entities/sale_entity.dart';
 import 'package:fish_business_manager/features/debts/application/debt_provider.dart';
 import 'package:fish_business_manager/features/transactions/application/transaction_provider.dart';
-import 'package:uuid/uuid.dart';
 
 import '../utils/test_utils.dart';
 
@@ -14,7 +13,7 @@ void main() {
   group('Sale Flow Tests', () {
     test('Bán hàng thành công - Khách trả đủ', () async {
       final container = createTestProviderContainer();
-      
+
       final customerRepo = container.read(customerRepositoryProvider);
       final inventoryRepo = container.read(inventoryRepositoryProvider);
       final createSaleUseCase = container.read(createSaleUseCaseProvider);
@@ -57,7 +56,8 @@ void main() {
       // Check Inventory
       final inventoryStream = inventoryRepo.watchInventorySummary();
       final inventorySummary = await inventoryStream.first;
-      final product1Stock = inventorySummary.firstWhere((e) => e.product.id == 1);
+      final product1Stock =
+          inventorySummary.firstWhere((e) => e.product.id == 1);
       expect(product1Stock.currentStock, 90); // 100 - 10
 
       // Check Transactions (Income should be recorded)
@@ -67,20 +67,23 @@ void main() {
       );
       expect(transactions.length, 1);
       expect(transactions.first.amount, 150000);
-      expect(transactions.first.type, 'Bán hàng'); // Depends on your enum to string
+      expect(transactions.first.type,
+          'Bán hàng'); // Depends on your enum to string
 
       // Check Debts
       final balances = await debtRepo.watchDebtList().first;
       // Khách trả đủ nên balance có thể không được tạo hoặc bằng 0
       if (balances.isNotEmpty) {
-        final customerBalance = balances.firstWhere((e) => e.customerId == customerId, orElse: () => throw Exception('Không tìm thấy'));
+        final customerBalance = balances.firstWhere(
+            (e) => e.customerId == customerId,
+            orElse: () => throw Exception('Không tìm thấy'));
         expect(customerBalance.balance, 0);
       }
     });
 
     test('Bán hàng thành công - Khách nợ một phần', () async {
       final container = createTestProviderContainer();
-      
+
       final customerRepo = container.read(customerRepositoryProvider);
       final inventoryRepo = container.read(inventoryRepositoryProvider);
       final createSaleUseCase = container.read(createSaleUseCaseProvider);
@@ -118,8 +121,10 @@ void main() {
 
       // Verification
       // Tồn kho: 100 - 20 = 80
-      final inventorySummary = await inventoryRepo.watchInventorySummary().first;
-      expect(inventorySummary.firstWhere((e) => e.product.id == 1).currentStock, 80);
+      final inventorySummary =
+          await inventoryRepo.watchInventorySummary().first;
+      expect(inventorySummary.firstWhere((e) => e.product.id == 1).currentStock,
+          80);
 
       // Thu tiền: 100k
       final transactions = await transactionRepo.getTransactions(
@@ -131,13 +136,14 @@ void main() {
 
       // Công nợ: 200k
       final balances = await debtRepo.watchDebtList().first;
-      final customerBalance = balances.firstWhere((e) => e.customerId == customerId);
+      final customerBalance =
+          balances.firstWhere((e) => e.customerId == customerId);
       expect(customerBalance.balance, 200000);
     });
-    
+
     test('Bán hàng thất bại - Bán lố tồn kho (BR-802)', () async {
       final container = createTestProviderContainer();
-      
+
       final customerRepo = container.read(customerRepositoryProvider);
       final inventoryRepo = container.read(inventoryRepositoryProvider);
       final createSaleUseCase = container.read(createSaleUseCaseProvider);

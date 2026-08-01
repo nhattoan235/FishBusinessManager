@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/dao/debt_dao.dart';
@@ -22,21 +21,10 @@ class DebtRepositoryImpl implements DebtRepository {
 
   @override
   Stream<List<DebtItemEntity>> watchDebtList() {
-    if (kIsWeb) {
-      return Stream.value([
-        DebtItemEntity(
-          customerId: 1,
-          customerName: 'Khách hàng mẫu (Web)',
-          customerPhone: '0909123456',
-          balance: 15000000,
-          lastUpdatedAt: DateTime.now(),
-        ),
-      ]);
-    }
-
     // Join customerBalances with customers
     final query = _db.select(_db.customerBalances).join([
-      innerJoin(_db.customers, _db.customers.id.equalsExp(_db.customerBalances.customerId)),
+      innerJoin(_db.customers,
+          _db.customers.id.equalsExp(_db.customerBalances.customerId)),
     ]);
 
     return query.watch().map((rows) {
@@ -64,7 +52,8 @@ class DebtRepositoryImpl implements DebtRepository {
     await _db.transaction(() async {
       // 1. Get current debt
       final existingBalances = await (_db.select(_db.customerBalances)
-        ..where((t) => t.customerId.equals(customerId))).get();
+            ..where((t) => t.customerId.equals(customerId)))
+          .get();
       if (existingBalances.isEmpty) {
         throw Exception('Khách hàng không có nợ');
       }
@@ -75,7 +64,8 @@ class DebtRepositoryImpl implements DebtRepository {
 
       // 2. Decrease Customer Balance
       await (_db.update(_db.customerBalances)
-        ..where((t) => t.customerId.equals(customerId))).write(CustomerBalancesCompanion(
+            ..where((t) => t.customerId.equals(customerId)))
+          .write(CustomerBalancesCompanion(
         currentDebt: Value(current.currentDebt - amount.toInt()),
         updatedAt: Value(DateTime.now()),
       ));

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/database/app_database.dart';
@@ -15,15 +14,6 @@ class InventoryRepositoryImpl implements InventoryRepository {
 
   @override
   Stream<List<InventorySummaryEntity>> watchInventorySummary() {
-    if (kIsWeb) {
-      return Stream.value([
-        InventorySummaryEntity(
-          product: ProductEntity(id: 1, uuid: 'p1', categoryId: 1, unitId: 1, name: 'Chứng nước', isActive: true, createdAt: DateTime.now()),
-          currentStock: 150,
-        ),
-      ]);
-    }
-
     // Ledger pattern: Sum(quantity) grouped by product via reactive watch
     final query = _db.customSelect(
       '''
@@ -43,7 +33,8 @@ class InventoryRepositoryImpl implements InventoryRepository {
         final pCreatedAtRaw = row.data['created_at'];
         DateTime pCreatedAt;
         if (pCreatedAtRaw is int) {
-          pCreatedAt = DateTime.fromMillisecondsSinceEpoch(pCreatedAtRaw * 1000);
+          pCreatedAt =
+              DateTime.fromMillisecondsSinceEpoch(pCreatedAtRaw * 1000);
         } else if (pCreatedAtRaw is String) {
           pCreatedAt = DateTime.parse(pCreatedAtRaw);
         } else {
@@ -77,11 +68,11 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   @override
-  Future<List<InventoryEntryEntity>> getInventoryHistory({int? limit, int? offset}) async {
-    if (kIsWeb) return [];
-    
+  Future<List<InventoryEntryEntity>> getInventoryHistory(
+      {int? limit, int? offset}) async {
     final query = _db.select(_db.inventoryEntries).join([
-      innerJoin(_db.products, _db.products.id.equalsExp(_db.inventoryEntries.productId)),
+      innerJoin(_db.products,
+          _db.products.id.equalsExp(_db.inventoryEntries.productId)),
     ])
       ..orderBy([OrderingTerm.desc(_db.inventoryEntries.createdAt)])
       ..limit(limit ?? 100, offset: offset);
@@ -119,8 +110,6 @@ class InventoryRepositoryImpl implements InventoryRepository {
     required double difference,
     String? note,
   }) async {
-    if (kIsWeb) return;
-    
     await _dao.insertEntry(InventoryEntriesCompanion.insert(
       uuid: const Uuid().v4(),
       productId: productId,

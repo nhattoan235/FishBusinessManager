@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/report_entity.dart';
@@ -11,19 +10,6 @@ class ReportRepositoryImpl implements ReportRepository {
 
   @override
   Future<List<MonthlyStatEntity>> getMonthlyStats(int year) async {
-    if (kIsWeb) {
-      // Mock data: 6 months of demo data
-      return List.generate(6, (i) {
-        final month = i + 1;
-        return MonthlyStatEntity(
-          year: year,
-          month: month,
-          totalIncome: (5000000 + i * 800000).toDouble(),
-          totalExpense: (2000000 + i * 300000).toDouble(),
-        );
-      });
-    }
-
     // Build start/end of year Unix timestamps
     final startOfYear = DateTime(year, 1, 1);
     final endOfYear = DateTime(year, 12, 31, 23, 59, 59);
@@ -63,29 +49,18 @@ class ReportRepositoryImpl implements ReportRepository {
     // Fill all months
     return List.generate(12, (i) {
       final month = i + 1;
-      return monthMap[month] ?? MonthlyStatEntity(
-        year: year,
-        month: month,
-        totalIncome: 0,
-        totalExpense: 0,
-      );
+      return monthMap[month] ??
+          MonthlyStatEntity(
+            year: year,
+            month: month,
+            totalIncome: 0,
+            totalExpense: 0,
+          );
     });
   }
 
   @override
   Future<List<DailyStatEntity>> getDailyStats(int year, int month) async {
-    if (kIsWeb) {
-      final daysInMonth = DateTime(year, month + 1, 0).day;
-      return List.generate(daysInMonth, (i) {
-        final day = i + 1;
-        return DailyStatEntity(
-          date: DateTime(year, month, day),
-          income: day % 3 == 0 ? 1500000 : 0,
-          expense: day % 5 == 0 ? 500000 : 0,
-        );
-      });
-    }
-
     final startOfMonth = DateTime(year, month, 1);
     final endOfMonth = DateTime(year, month + 1, 0, 23, 59, 59);
 
@@ -122,11 +97,12 @@ class ReportRepositoryImpl implements ReportRepository {
     final daysInMonth = DateTime(year, month + 1, 0).day;
     return List.generate(daysInMonth, (i) {
       final day = i + 1;
-      return dayMap[day] ?? DailyStatEntity(
-        date: DateTime(year, month, day),
-        income: 0,
-        expense: 0,
-      );
+      return dayMap[day] ??
+          DailyStatEntity(
+            date: DateTime(year, month, day),
+            income: 0,
+            expense: 0,
+          );
     });
   }
 
@@ -152,8 +128,10 @@ class ReportRepositoryImpl implements ReportRepository {
       ],
     ).getSingleOrNull();
 
-    final mIncome = (resultMonth?.data['total_income'] as num?)?.toDouble() ?? 0.0;
-    final mExpense = (resultMonth?.data['total_expense'] as num?)?.toDouble() ?? 0.0;
+    final mIncome =
+        (resultMonth?.data['total_income'] as num?)?.toDouble() ?? 0.0;
+    final mExpense =
+        (resultMonth?.data['total_expense'] as num?)?.toDouble() ?? 0.0;
     final monthProfit = mIncome - mExpense;
 
     // 2. Lãi trong quý (6 tháng qua) bao gồm cả tháng hiện tại
@@ -174,8 +152,10 @@ class ReportRepositoryImpl implements ReportRepository {
       ],
     ).getSingleOrNull();
 
-    final qIncome = (resultQuarter?.data['total_income'] as num?)?.toDouble() ?? 0.0;
-    final qExpense = (resultQuarter?.data['total_expense'] as num?)?.toDouble() ?? 0.0;
+    final qIncome =
+        (resultQuarter?.data['total_income'] as num?)?.toDouble() ?? 0.0;
+    final qExpense =
+        (resultQuarter?.data['total_expense'] as num?)?.toDouble() ?? 0.0;
     final quarterProfit = qIncome - qExpense;
 
     return {

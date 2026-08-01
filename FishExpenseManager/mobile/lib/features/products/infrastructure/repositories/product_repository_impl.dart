@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/dao/product_dao.dart';
@@ -14,14 +13,11 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<List<ProductEntity>> getAllProducts() async {
-    if (kIsWeb) return _getMockProducts();
     return _fetchWithStock();
   }
 
   @override
   Stream<List<ProductEntity>> watchAllProducts() {
-    if (kIsWeb) return Stream.value(_getMockProducts());
-
     // Watch sản phẩm, khi có thay đổi thì tính lại tồn kho
     return _db.select(_db.products).watch().asyncMap((_) => _fetchWithStock());
   }
@@ -44,7 +40,12 @@ class ProductRepositoryImpl implements ProductRepository {
       GROUP BY p.id
       ORDER BY p.name
       ''',
-      readsFrom: {_db.products, _db.productCategories, _db.units, _db.inventoryEntries},
+      readsFrom: {
+        _db.products,
+        _db.productCategories,
+        _db.units,
+        _db.inventoryEntries
+      },
     ).get();
 
     return rows.map((row) => _mapRow(row)).toList();
@@ -73,11 +74,16 @@ class ProductRepositoryImpl implements ProductRepository {
       uuid: d['uuid'] as String,
       categoryId: d['category_id'] as int,
       category: catName != null
-          ? ProductCategoryEntity(id: d['category_id'] as int, uuid: '', name: catName)
+          ? ProductCategoryEntity(
+              id: d['category_id'] as int, uuid: '', name: catName)
           : null,
       unitId: d['unit_id'] as int,
       unit: unitName != null
-          ? UnitEntity(id: d['unit_id'] as int, uuid: '', name: unitName, symbol: unitSymbol ?? '')
+          ? UnitEntity(
+              id: d['unit_id'] as int,
+              uuid: '',
+              name: unitName,
+              symbol: unitSymbol ?? '')
           : null,
       name: d['name'] as String,
       defaultPrice: d['default_price'] as int?,
@@ -90,8 +96,6 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> saveProduct(ProductEntity product) async {
-    if (kIsWeb) return;
-
     final companion = ProductsCompanion(
       uuid: Value(product.uuid),
       categoryId: Value(product.categoryId),
@@ -113,7 +117,6 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> deleteProduct(int id) async {
-    if (kIsWeb) return;
     await (_db.update(_db.products)..where((t) => t.id.equals(id))).write(
       ProductsCompanion(
         isActive: const Value(false),
@@ -124,49 +127,18 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<List<ProductCategoryEntity>> getCategories() async {
-    if (kIsWeb) return _getMockCategories();
     final data = await _dao.getAllCategories();
-    return data.map((e) => ProductCategoryEntity(id: e.id, uuid: e.uuid, name: e.name)).toList();
+    return data
+        .map((e) => ProductCategoryEntity(id: e.id, uuid: e.uuid, name: e.name))
+        .toList();
   }
 
   @override
   Future<List<UnitEntity>> getUnits() async {
-    if (kIsWeb) return _getMockUnits();
     final data = await _dao.getAllUnits();
     return data
-        .map((e) => UnitEntity(id: e.id, uuid: e.uuid, name: e.name, symbol: e.symbol))
+        .map((e) =>
+            UnitEntity(id: e.id, uuid: e.uuid, name: e.name, symbol: e.symbol))
         .toList();
-  }
-
-  List<ProductEntity> _getMockProducts() {
-    return [
-      ProductEntity(
-        id: 1,
-        uuid: 'p1',
-        categoryId: 1,
-        unitId: 1,
-        name: 'Chứng nước',
-        defaultPrice: 25000,
-        isActive: true,
-        createdAt: DateTime.now(),
-        currentStock: 320,
-        category: const ProductCategoryEntity(id: 1, uuid: 'c1', name: 'Chứng nước'),
-        unit: const UnitEntity(id: 1, uuid: 'u1', name: 'Kilogram', symbol: 'kg'),
-      ),
-    ];
-  }
-
-  List<ProductCategoryEntity> _getMockCategories() {
-    return const [
-      ProductCategoryEntity(id: 1, uuid: 'c1', name: 'Chứng nước'),
-      ProductCategoryEntity(id: 2, uuid: 'c2', name: 'Cá giống'),
-    ];
-  }
-
-  List<UnitEntity> _getMockUnits() {
-    return const [
-      UnitEntity(id: 1, uuid: 'u1', name: 'Kilogram', symbol: 'kg'),
-      UnitEntity(id: 2, uuid: 'u2', name: 'Bao', symbol: 'bao'),
-    ];
   }
 }

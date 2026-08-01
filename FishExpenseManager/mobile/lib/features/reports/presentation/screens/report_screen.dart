@@ -44,20 +44,23 @@ class _ReportScreenState extends ConsumerState<ReportScreen>
           controller: _tabController,
           labelColor: Colors.yellow,
           unselectedLabelColor: Colors.white,
-          labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          labelStyle:
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           unselectedLabelStyle: const TextStyle(fontSize: 16),
           indicatorColor: Colors.yellow,
           indicatorWeight: 4,
           tabs: const [
             Tab(text: 'Theo tháng', icon: Icon(Icons.bar_chart, size: 28)),
-            Tab(text: 'Theo ngày',  icon: Icon(Icons.show_chart, size: 28)),
+            Tab(text: 'Theo ngày', icon: Icon(Icons.show_chart, size: 28)),
           ],
         ),
         actions: [
           // Year selector
           TextButton.icon(
             icon: const Icon(Icons.calendar_today, size: 16),
-            label: Text('$year', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            label: Text('$year',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             onPressed: () => _pickYear(context),
           ),
         ],
@@ -79,10 +82,12 @@ class _ReportScreenState extends ConsumerState<ReportScreen>
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Text('Chọn năm'),
-        children: years.map((y) => SimpleDialogOption(
-          onPressed: () => Navigator.pop(ctx, y),
-          child: Text('$y', style: const TextStyle(fontSize: 18)),
-        )).toList(),
+        children: years
+            .map((y) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, y),
+                  child: Text('$y', style: const TextStyle(fontSize: 18)),
+                ))
+            .toList(),
       ),
     );
     if (selected != null) {
@@ -103,9 +108,10 @@ class _MonthlyTab extends ConsumerWidget {
 
     return statsAsync.when(
       data: (stats) {
-        final totalIncome = stats.fold<double>(0, (sum, s) => sum + s.totalIncome);
-        final totalExpense = stats.fold<double>(0, (sum, s) => sum + s.totalExpense);
-        final profit = totalIncome - totalExpense;
+        final totalIncome =
+            stats.fold<double>(0, (sum, s) => sum + s.totalIncome);
+        final totalExpense =
+            stats.fold<double>(0, (sum, s) => sum + s.totalExpense);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -157,9 +163,11 @@ class _MonthlyTab extends ConsumerWidget {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.sm),
-              ...stats.where((s) => s.totalIncome > 0 || s.totalExpense > 0).map(
-                (s) => _MonthlyRow(stat: s, year: year),
-              ),
+              ...stats
+                  .where((s) => s.totalIncome > 0 || s.totalExpense > 0)
+                  .map(
+                    (s) => _MonthlyRow(stat: s, year: year),
+                  ),
             ],
           ),
         );
@@ -178,8 +186,19 @@ class _DailyTab extends ConsumerWidget {
   const _DailyTab({required this.year, required this.month});
 
   static const _months = [
-    '', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-    'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+    '',
+    'Tháng 1',
+    'Tháng 2',
+    'Tháng 3',
+    'Tháng 4',
+    'Tháng 5',
+    'Tháng 6',
+    'Tháng 7',
+    'Tháng 8',
+    'Tháng 9',
+    'Tháng 10',
+    'Tháng 11',
+    'Tháng 12',
   ];
 
   @override
@@ -190,26 +209,30 @@ class _DailyTab extends ConsumerWidget {
       children: [
         // Month selector
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left),
                 onPressed: month > 1
-                    ? () => ref.read(selectedMonthProvider.notifier).state = month - 1
+                    ? () => ref.read(selectedMonthProvider.notifier).state =
+                        month - 1
                     : null,
               ),
               Expanded(
                 child: Text(
                   '${_months[month]} / $year',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed: month < 12
-                    ? () => ref.read(selectedMonthProvider.notifier).state = month + 1
+                    ? () => ref.read(selectedMonthProvider.notifier).state =
+                        month + 1
                     : null,
               ),
             ],
@@ -219,7 +242,8 @@ class _DailyTab extends ConsumerWidget {
           child: statsAsync.when(
             data: (stats) {
               final totalIncome = stats.fold<double>(0, (s, d) => s + d.income);
-              final totalExpense = stats.fold<double>(0, (s, d) => s + d.expense);
+              final totalExpense =
+                  stats.fold<double>(0, (s, d) => s + d.expense);
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -244,10 +268,11 @@ class _DailyTab extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    
+
                     const Text(
                       'Biểu đồ Tổng Thu (7 ngày)',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Card(
@@ -260,10 +285,11 @@ class _DailyTab extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    
+
                     const Text(
                       'Biểu đồ Tổng Chi (7 ngày)',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Card(
@@ -276,20 +302,22 @@ class _DailyTab extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    
+
                     const Text(
                       'Chi tiết từng ngày',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     // Only show days with data
                     ...stats.where((d) => d.income > 0 || d.expense > 0).map(
-                      (d) => _DailyRow(stat: d),
-                    ),
+                          (d) => _DailyRow(stat: d),
+                        ),
                     if (stats.every((d) => d.income == 0 && d.expense == 0))
                       const Padding(
                         padding: EdgeInsets.all(AppSpacing.xl),
-                        child: Center(child: Text('Không có dữ liệu trong tháng này')),
+                        child: Center(
+                            child: Text('Không có dữ liệu trong tháng này')),
                       ),
                   ],
                 ),
@@ -332,7 +360,9 @@ class _SummaryCard extends StatelessWidget {
                 children: [
                   Icon(icon, color: color, size: 18),
                   const SizedBox(width: 4),
-                  Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+                  Text(label,
+                      style:
+                          TextStyle(color: color, fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(height: 4),
@@ -373,7 +403,10 @@ class _ProfitSummaryCard extends ConsumerWidget {
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)], // Xanh lá sáng nhẹ
+                colors: [
+                  Color(0xFFE8F5E9),
+                  Color(0xFFC8E6C9)
+                ], // Xanh lá sáng nhẹ
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -411,7 +444,10 @@ class _ProfitSummaryCard extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
             Text(
               label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87),
             ),
           ],
         ),
@@ -434,8 +470,19 @@ class _MonthlyRow extends StatelessWidget {
   const _MonthlyRow({required this.stat, required this.year});
 
   static const _monthNames = [
-    '', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-    'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+    '',
+    'Tháng 1',
+    'Tháng 2',
+    'Tháng 3',
+    'Tháng 4',
+    'Tháng 5',
+    'Tháng 6',
+    'Tháng 7',
+    'Tháng 8',
+    'Tháng 9',
+    'Tháng 10',
+    'Tháng 11',
+    'Tháng 12',
   ];
 
   @override
@@ -449,13 +496,22 @@ class _MonthlyRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('${_monthNames[stat.month]} / $year',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary)),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: AppColors.primary)),
             const SizedBox(height: 8),
             Row(
               children: [
-                _StatChip(label: '↓ Thu', amount: stat.totalIncome, color: AppColors.success),
+                _StatChip(
+                    label: '↓ Thu',
+                    amount: stat.totalIncome,
+                    color: AppColors.success),
                 const SizedBox(width: AppSpacing.sm),
-                _StatChip(label: '↑ Chi', amount: stat.totalExpense, color: AppColors.error),
+                _StatChip(
+                    label: '↑ Chi',
+                    amount: stat.totalExpense,
+                    color: AppColors.error),
                 const SizedBox(width: AppSpacing.sm),
                 _StatChip(
                   label: isProfit ? 'Lãi' : 'Lỗ',
@@ -475,7 +531,8 @@ class _StatChip extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
-  const _StatChip({required this.label, required this.amount, required this.color});
+  const _StatChip(
+      {required this.label, required this.amount, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -486,7 +543,8 @@ class _StatChip extends StatelessWidget {
           Text(label, style: TextStyle(fontSize: 11, color: color)),
           Text(
             CurrencyFormatter.formatCompact(amount),
-            style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 13),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: color, fontSize: 13),
           ),
         ],
       ),
@@ -500,9 +558,19 @@ class _DailyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final weekdays = ['', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+    final weekdays = [
+      '',
+      'Thứ 2',
+      'Thứ 3',
+      'Thứ 4',
+      'Thứ 5',
+      'Thứ 6',
+      'Thứ 7',
+      'Chủ nhật'
+    ];
     final weekdayStr = weekdays[stat.date.weekday];
-    final dateStr = '${stat.date.day.toString().padLeft(2, '0')}/${stat.date.month.toString().padLeft(2, '0')}/${stat.date.year}';
+    final dateStr =
+        '${stat.date.day.toString().padLeft(2, '0')}/${stat.date.month.toString().padLeft(2, '0')}/${stat.date.year}';
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -513,17 +581,26 @@ class _DailyRow extends StatelessWidget {
           children: [
             Text(
               '$weekdayStr, $dateStr',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (stat.income > 0)
                   Text('+ ${CurrencyFormatter.formatCompact(stat.income)}',
-                      style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 16)),
+                      style: const TextStyle(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16)),
                 if (stat.expense > 0)
                   Text('- ${CurrencyFormatter.formatCompact(stat.expense)}',
-                      style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 16)),
+                      style: const TextStyle(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16)),
               ],
             ),
           ],

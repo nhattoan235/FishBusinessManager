@@ -110,6 +110,19 @@ class InventoryRepositoryImpl implements InventoryRepository {
     required double difference,
     String? note,
   }) async {
+    // BR-802: Không cho phép tồn kho âm
+    if (difference < 0) {
+      final stockResult = await _db.customSelect(
+        'SELECT COALESCE(SUM(quantity), 0.0) AS stock FROM inventory_entries WHERE product_id = ?',
+        variables: [Variable.withInt(productId)],
+      ).getSingle();
+      final currentStock = stockResult.read<double>('stock');
+      if (currentStock + difference < 0) {
+        throw Exception(
+            'Không thể điều chỉnh: Tồn kho sẽ âm (BR-802). Tồn kho hiện tại: $currentStock, Điều chỉnh: $difference');
+      }
+    }
+
     await _dao.insertEntry(InventoryEntriesCompanion.insert(
       uuid: const Uuid().v4(),
       productId: productId,

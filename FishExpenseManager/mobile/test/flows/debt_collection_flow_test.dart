@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fish_business_manager/features/customers/application/customer_provider.dart';
 import 'package:fish_business_manager/features/customers/domain/entities/customer_entity.dart';
@@ -6,134 +8,244 @@ import 'package:fish_business_manager/features/sales/application/sale_provider.d
 import 'package:fish_business_manager/features/sales/domain/entities/sale_entity.dart';
 import 'package:fish_business_manager/features/debts/application/debt_provider.dart';
 import 'package:fish_business_manager/features/transactions/application/transaction_provider.dart';
+import 'package:fish_business_manager/core/database/providers/database_provider.dart';
 
 import '../utils/test_utils.dart';
 
 void main() {
-  group('Debt Collection Flow Tests', () {
-    test('Thu nợ thành công (BR-702, BR-501)', () async {
-      final container = createTestProviderContainer();
-      
+  group('Debt Collection Flow Tests — UC-011 Ghi nhận Thu nợ Khách hàng', () {
+    // ─── Helper: Tạo sẵn khách hàng có nợ ────────────────────────────────────
+    Future<Map<String, dynamic>> setupCustomerWithDebt(
+      ProviderContainer container, {
+      required String uuid,
+      required String name,
+      required double totalAmount,
+      required double paidAmount,
+    }) async {
       final customerRepo = container.read(customerRepositoryProvider);
       final inventoryRepo = container.read(inventoryRepositoryProvider);
       final createSaleUseCase = container.read(createSaleUseCaseProvider);
-      final debtRepo = container.read(debtRepositoryProvider);
-      final transactionRepo = container.read(transactionRepositoryProvider);
 
-      // 1. Tạo khách hàng
       final customerId = await customerRepo.addCustomer(
         CustomerEntity(
-          uuid: 'test-uuid-debt-1',
-          name: 'Khách hàng Nợ',
+          uuid: uuid,
+          name: name,
           createdAt: DateTime.now(),
         ),
       );
 
-      // 2. Nhập kho để có hàng bán
       await inventoryRepo.adjustInventory(
-        productId: 1,
-        difference: 100,
-      );
+          productId: 1, difference: totalAmount / 25000 + 10);
 
-      // 3. Tạo một đơn hàng nợ (Tổng 500k, trả 100k -> Nợ 400k)
       await createSaleUseCase.execute(
         customerId: customerId,
-        totalAmount: 500000,
-        paidAmount: 100000,
+        totalAmount: totalAmount,
+        paidAmount: paidAmount,
         saleDate: DateTime.now(),
         items: [
-          const SaleItemEntity(
+          SaleItemEntity(
             productId: 1,
-            quantity: 20,
+            quantity: totalAmount / 25000,
             unitPrice: 25000,
-            subTotal: 500000,
+            subTotal: totalAmount,
           ),
         ],
       );
 
-      // Kiểm tra nợ ban đầu là 400k
-      var debtList = await debtRepo.watchDebtList().first;
-      var customerDebt = debtList.firstWhere((e) => e.customerId == customerId);
-      expect(customerDebt.balance, 400000);
+      return {
+        'customerId': customerId,
+        'debtAmount': totalAmount - paidAmount,
+      };
+    }
 
-      // Đếm số lượng transaction ban đầu (1 transaction từ sale)
+    // ─── Happy Path ───────────────────────────────────────────────────────────
+
+    test('Thu nợ thành công - Trả một phần (BR-702, BR-501)', () async {
+      final container = createTestProviderContainer();
+      addTearDown(container.dispose);
+
+      final debtRepo = container.read(debtRepositoryProvider);
+      final transactionRepo = container.read(transactionRepositoryProvider);
+
+      // Setup: Nợ 400k
+      final setupResult = await setupCustomerWithDebt(
+        container,
+        uuid: 'test-uuid-debt-1',
+        name: 'Khách hàng Nợ A',
+        totalAmount: 500000,
+        paidAmount: 100000,
+      );
+      final customerId = setupResult['customerId'] as int;
+      final debtAmount = setupResult['debtAmount'] as double;
+      expect(debtAmount, 400000);
+
+      // Đếm transaction ban đầu
       var transactions = await transactionRepo.getTransactions(
         startDate: DateTime.now().subtract(const Duration(days: 1)),
         endDate: DateTime.now().add(const Duration(days: 1)),
       );
       final initialTransactionCount = transactions.length;
+      // Có đúng 1 transaction từ lúc bán (paidAmount = 100k)
       expect(initialTransactionCount, 1);
 
-      // 4. Thực hiện thu nợ 150k
+      // Thu nợ 150k
       await debtRepo.collectDebt(
         customerId: customerId,
         amount: 150000,
         date: DateTime.now(),
       );
 
-      // 5. Xác minh
-      // Công nợ giảm xuống còn 250k
-      debtList = await debtRepo.watchDebtList().first;
-      customerDebt = debtList.firstWhere((e) => e.customerId == customerId);
-      expect(customerDebt.balance, 250000);
+      // Nợ giảm còn 250k
+      final debtList = await debtRepo.watchDebtList().first;
+      final customerDebt =
+          debtList.firstWhere((e) => e.customerId == customerId);
+      expect(customerDebt.balance, 250000,
+          reason: '400k - 150k = 250k còn lại');
 
-      // Transaction tăng thêm 1 (Thu nợ)
+      // Transaction tăng thêm 1 (thu nợ)
       transactions = await transactionRepo.getTransactions(
         startDate: DateTime.now().subtract(const Duration(days: 1)),
         endDate: DateTime.now().add(const Duration(days: 1)),
       );
       expect(transactions.length, initialTransactionCount + 1);
-      final collectTx = transactions.last;
+
+      final collectTx = transactions.firstWhere((t) => t.type == 'Thu nợ');
       expect(collectTx.amount, 150000);
-      expect(collectTx.isIncome, true);
-      expect(collectTx.type, 'Thu nợ');
+      expect(collectTx.isIncome, true,
+          reason: 'Thu nợ là giao dịch thu (income)');
     });
+
+    test('Thu nợ thành công - Trả hết toàn bộ nợ (BR-501, BR-703)', () async {
+      final container = createTestProviderContainer();
+      addTearDown(container.dispose);
+
+      final debtRepo = container.read(debtRepositoryProvider);
+
+      // Setup: Nợ 200k
+      final setupResult = await setupCustomerWithDebt(
+        container,
+        uuid: 'test-uuid-debt-3',
+        name: 'Khách hàng Nợ C',
+        totalAmount: 200000,
+        paidAmount: 0,
+      );
+      final customerId = setupResult['customerId'] as int;
+      final debtAmount = setupResult['debtAmount'] as double;
+      expect(debtAmount, 200000);
+
+      // Thu đúng bằng số nợ
+      await debtRepo.collectDebt(
+        customerId: customerId,
+        amount: 200000,
+        date: DateTime.now(),
+      );
+
+      // Nợ = 0
+      final debtList = await debtRepo.watchDebtList().first;
+      final customerBalance =
+          debtList.firstWhere((e) => e.customerId == customerId);
+      expect(customerBalance.balance, 0,
+          reason: 'Trả hết nợ, balance phải = 0');
+    });
+
+    test(
+        'Thu nợ thành công - Lịch sử debt_transactions có bản ghi decrease (BR-702)',
+        () async {
+      final container = createTestProviderContainer();
+      addTearDown(container.dispose);
+
+      final debtRepo = container.read(debtRepositoryProvider);
+      final db = container.read(databaseProvider);
+
+      // Setup: Nợ 300k
+      final setupResult = await setupCustomerWithDebt(
+        container,
+        uuid: 'test-uuid-debt-4',
+        name: 'Khách hàng Nợ D',
+        totalAmount: 300000,
+        paidAmount: 0,
+      );
+      final customerId = setupResult['customerId'] as int;
+
+      // Thu 100k
+      await debtRepo.collectDebt(
+        customerId: customerId,
+        amount: 100000,
+        date: DateTime.now(),
+      );
+
+      // Kiểm tra bảng debt_transactions có bản ghi decrease
+      final allDebtTx = await db.select(db.debtTransactions).get();
+      final decreaseTx = allDebtTx
+          .where(
+              (tx) => tx.customerId == customerId && tx.changeType == 'decrease')
+          .toList();
+
+      expect(decreaseTx.isNotEmpty, true,
+          reason:
+              'Phải có bản ghi decrease trong debt_transactions (BR-702)');
+      expect(decreaseTx.first.amount, 100000);
+    });
+
+    // ─── Validation / Error Cases ─────────────────────────────────────────────
 
     test('Thu nợ thất bại - Vượt quá số nợ (BR-503)', () async {
       final container = createTestProviderContainer();
-      
-      final customerRepo = container.read(customerRepositoryProvider);
-      final inventoryRepo = container.read(inventoryRepositoryProvider);
-      final createSaleUseCase = container.read(createSaleUseCaseProvider);
+      addTearDown(container.dispose);
+
       final debtRepo = container.read(debtRepositoryProvider);
 
-      final customerId = await customerRepo.addCustomer(
-        CustomerEntity(
-          uuid: 'test-uuid-debt-2',
-          name: 'Khách hàng Nợ 2',
-          createdAt: DateTime.now(),
-        ),
-      );
-
-      await inventoryRepo.adjustInventory(
-        productId: 1,
-        difference: 100,
-      );
-
-      // Bán nợ 200k
-      await createSaleUseCase.execute(
-        customerId: customerId,
+      // Setup: Nợ 200k
+      final setupResult = await setupCustomerWithDebt(
+        container,
+        uuid: 'test-uuid-debt-2',
+        name: 'Khách hàng Nợ B',
         totalAmount: 200000,
         paidAmount: 0,
-        saleDate: DateTime.now(),
-        items: [
-          const SaleItemEntity(
-            productId: 1,
-            quantity: 10,
-            unitPrice: 20000,
-            subTotal: 200000,
-          ),
-        ],
       );
+      final customerId = setupResult['customerId'] as int;
 
-      // Cố gắng thu 300k (Lớn hơn 200k)
+      // Cố thu 300k > 200k → phải ném lỗi
       await expectLater(
         debtRepo.collectDebt(
           customerId: customerId,
-          amount: 300000,
+          amount: 300000, // Vi phạm BR-503
           date: DateTime.now(),
         ),
-        throwsException, // Số tiền thu không được lớn hơn số tiền nợ
+        throwsException,
+      );
+
+      // Nợ không thay đổi
+      final debtList = await debtRepo.watchDebtList().first;
+      final customerBalance =
+          debtList.firstWhere((e) => e.customerId == customerId);
+      expect(customerBalance.balance, 200000,
+          reason: 'Nợ phải nguyên vẹn sau khi rollback');
+    });
+
+    test('Thu nợ thất bại - Số tiền = 0 (BR-503)', () async {
+      final container = createTestProviderContainer();
+      addTearDown(container.dispose);
+
+      final debtRepo = container.read(debtRepositoryProvider);
+
+      final setupResult = await setupCustomerWithDebt(
+        container,
+        uuid: 'test-uuid-debt-5',
+        name: 'Khách hàng Nợ E',
+        totalAmount: 100000,
+        paidAmount: 0,
+      );
+      final customerId = setupResult['customerId'] as int;
+
+      // Thu 0 đồng → phải lỗi
+      await expectLater(
+        debtRepo.collectDebt(
+          customerId: customerId,
+          amount: 0, // Không hợp lệ theo BR-503
+          date: DateTime.now(),
+        ),
+        throwsException,
       );
     });
   });

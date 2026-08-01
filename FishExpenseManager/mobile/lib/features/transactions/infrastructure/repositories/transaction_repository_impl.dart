@@ -16,7 +16,27 @@ class TransactionRepositoryImpl implements TransactionRepository {
     DateTime? endDate,
     bool? isIncome,
   }) async {
-    final data = await _dao.getAllTransactions();
+    final query = _dao.attachedDatabase.select(_dao.attachedDatabase.transactions);
+
+    query
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
+      ])
+      ..where((t) {
+        Expression<bool> condition = const Constant(true);
+        if (startDate != null) {
+          condition = condition & t.date.isBiggerOrEqualValue(startDate);
+        }
+        if (endDate != null) {
+          condition = condition & t.date.isSmallerOrEqualValue(endDate);
+        }
+        if (isIncome != null) {
+          condition = condition & t.isIncome.equals(isIncome);
+        }
+        return condition;
+      });
+
+    final data = await query.get();
     return data.map(_mapToEntity).toList();
   }
 

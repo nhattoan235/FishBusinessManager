@@ -50,7 +50,12 @@ class DebtRepositoryImpl implements DebtRepository {
     required DateTime date,
   }) async {
     await _db.transaction(() async {
-      // 1. Get current debt
+      // 1. Validate amount > 0 (BR-503)
+      if (amount <= 0) {
+        throw Exception('Số tiền thu phải lớn hơn 0 (BR-503)');
+      }
+
+      // 2. Get current debt
       final existingBalances = await (_db.select(_db.customerBalances)
             ..where((t) => t.customerId.equals(customerId)))
           .get();
@@ -59,7 +64,7 @@ class DebtRepositoryImpl implements DebtRepository {
       }
       final current = existingBalances.first;
       if (current.currentDebt < amount.toInt()) {
-        throw Exception('Số tiền thu không được lớn hơn số tiền nợ');
+        throw Exception('Số tiền thu không được lớn hơn số tiền nợ (BR-503)');
       }
 
       // 2. Decrease Customer Balance

@@ -28,7 +28,7 @@ class ProductDetailRepository {
     // Lịch sử bán (sale_items với sale_documents)
     final saleRows = await _db.customSelect(
       '''
-      SELECT si.quantity, si.unit_price, si.subtotal,
+      SELECT si.quantity, si.unit_price, si.total_price AS subtotal,
              sd.sale_date, c.name AS customer_name
       FROM sale_items si
       JOIN sale_documents sd ON sd.id = si.sale_document_id

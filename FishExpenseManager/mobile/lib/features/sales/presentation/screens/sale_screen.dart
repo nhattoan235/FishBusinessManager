@@ -53,41 +53,80 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
 
     // Nếu chưa chọn ID mà có text, hỏi tạo mới
     if (_selectedCustomerId == null && _customerSearchText.isNotEmpty) {
-      final confirm = await showDialog<bool>(
+      final phoneController = TextEditingController();
+      final formKey = GlobalKey<FormState>();
+
+      final result = await showDialog<String?>(
         context: context,
+        barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text('Khách hàng mới'),
-          content: Text(
-              '"$_customerSearchText" chưa có trong hệ thống.\nBạn có muốn tạo khách hàng này không?'),
+          title: const Text('Tạo Khách hàng mới'),
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Khách hàng "$_customerSearchText" chưa có.\nBạn có muốn tạo mới không?'),
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Số điện thoại *',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.phone),
+                      ),
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) {
+                          return 'Vui lòng nhập số điện thoại';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Không')),
+              onPressed: () => Navigator.pop(ctx, null),
+              child: const Text('Không'),
+            ),
             ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Đúng')),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(ctx, phoneController.text.trim());
+                }
+              },
+              child: const Text('Có'),
+            ),
           ],
         ),
       );
-      if (confirm != true) return;
+
+      if (result == null) return; // Người dùng chọn Không hoặc huỷ
 
       try {
         final newCustomer = CustomerEntity(
           uuid: DateTime.now().millisecondsSinceEpoch.toString(),
           name: _customerSearchText,
-          phone: '',
+          phone: result, // Sử dụng số điện thoại vừa nhập
           address: '',
           note: '',
+          isActive: true, // Đảm bảo trạng thái active
           createdAt: DateTime.now(),
         );
         final createdId =
             await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
         setState(() => _selectedCustomerId = createdId);
-        // refresh list to get new customer (StreamProvider usually auto-updates, but just in case)
       } catch (e) {
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text('Lỗi tạo KH: $e')));
+        }
         return;
       }
     }

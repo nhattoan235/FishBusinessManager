@@ -69,18 +69,23 @@ class _DebtListScreenState extends ConsumerState<DebtListScreen> {
                         ),
                         title: Text(debt.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text('Cập nhật: ${DateFormatter.formatDate(debt.lastUpdatedAt)}'),
-                        trailing: Text(
-                          CurrencyFormatter.format(debt.balance),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: debt.balance > 0 ? AppColors.error : AppColors.success,
-                            fontSize: 16,
-                          ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              CurrencyFormatter.format(debt.balance),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: debt.balance > 0 ? AppColors.error : AppColors.success,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.chevron_right, color: Colors.grey),
+                          ],
                         ),
                         onTap: () {
-                          if (debt.balance > 0) {
-                            context.push('/debts/collect/${debt.customerId}');
-                          }
+                          context.push('/debts/detail/${debt.customerId}');
                         },
                       ),
                     );

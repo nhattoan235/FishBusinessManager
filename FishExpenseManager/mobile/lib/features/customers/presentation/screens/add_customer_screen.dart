@@ -16,6 +16,36 @@ class AddCustomerScreen extends ConsumerStatefulWidget {
   ConsumerState<AddCustomerScreen> createState() => _AddCustomerScreenState();
 }
 
+class EditCustomerScreen extends ConsumerWidget {
+  final int customerId;
+
+  const EditCustomerScreen({super.key, required this.customerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final customerAsync = ref.watch(customerByIdProvider(customerId));
+    return customerAsync.when(
+      data: (customer) {
+        if (customer == null || !customer.isActive) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Sửa Khách Hàng')),
+            body: const Center(child: Text('Không tìm thấy khách hàng.')),
+          );
+        }
+        return AddCustomerScreen(existing: customer);
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: const Text('Sửa Khách Hàng')),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Scaffold(
+        appBar: AppBar(title: const Text('Sửa Khách Hàng')),
+        body: Center(child: Text('Không thể tải khách hàng: $error')),
+      ),
+    );
+  }
+}
+
 class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
@@ -29,8 +59,10 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.existing?.name ?? '');
-    _phoneController = TextEditingController(text: widget.existing?.phone ?? '');
-    _addressController = TextEditingController(text: widget.existing?.address ?? '');
+    _phoneController =
+        TextEditingController(text: widget.existing?.phone ?? '');
+    _addressController =
+        TextEditingController(text: widget.existing?.address ?? '');
     _noteController = TextEditingController(text: widget.existing?.note ?? '');
   }
 
@@ -50,9 +82,15 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
       id: widget.existing?.id,
       uuid: widget.existing?.uuid ?? const Uuid().v4(),
       name: _nameController.text.trim(),
-      phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-      address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-      note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+      phone: _phoneController.text.trim().isEmpty
+          ? null
+          : _phoneController.text.trim(),
+      address: _addressController.text.trim().isEmpty
+          ? null
+          : _addressController.text.trim(),
+      note: _noteController.text.trim().isEmpty
+          ? null
+          : _noteController.text.trim(),
       createdAt: widget.existing?.createdAt ?? DateTime.now(),
     );
 
@@ -61,13 +99,17 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
       await repo.saveCustomer(customer);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_isEditing ? 'Đã cập nhật khách hàng' : 'Đã thêm khách hàng')),
+          SnackBar(
+              content: Text(_isEditing
+                  ? 'Đã cập nhật khách hàng'
+                  : 'Đã thêm khách hàng')),
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
     }
   }
@@ -75,7 +117,8 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng')),
+      appBar: AppBar(
+          title: Text(_isEditing ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Form(
@@ -90,7 +133,9 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
-                validator: (val) => (val == null || val.trim().isEmpty) ? 'Vui lòng nhập tên' : null,
+                validator: (val) => (val == null || val.trim().isEmpty)
+                    ? 'Vui lòng nhập tên'
+                    : null,
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -124,7 +169,8 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
               const SizedBox(height: AppSpacing.xl),
               ElevatedButton.icon(
                 onPressed: _save,
-                icon: Icon(_isEditing ? Icons.save : Icons.person_add, color: Colors.white),
+                icon: Icon(_isEditing ? Icons.save : Icons.person_add,
+                    color: Colors.white),
                 label: Text(
                   _isEditing ? 'Lưu Thay Đổi' : 'Thêm Khách Hàng',
                   style: const TextStyle(fontSize: 16, color: Colors.white),

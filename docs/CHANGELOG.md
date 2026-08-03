@@ -1,5 +1,20 @@
 # CHANGELOG — docs/
 
+## 02/08/2026 — Tồn kho ban đầu và lịch sử khách hàng
+
+- Bổ sung BR-305: khi tạo sản phẩm có thể nhập tồn kho ban đầu, nhưng phải ghi
+  qua `inventory_entries` trong cùng Database Transaction.
+- Cập nhật Use Case, Screen Specification và Activity Diagram quản lý sản phẩm.
+- Làm rõ màn hình chi tiết khách hàng hiển thị cả thanh toán khi mua hàng và các
+  lần thu nợ, tách biệt theo đúng khách hàng.
+- Khách hàng tạo nhanh trong màn hình Bán hàng được lưu ngay sau bước xác nhận
+  tên và số điện thoại; ID vừa tạo được dùng trực tiếp cho phiếu bán.
+- Sửa luồng chỉnh sửa để tải đúng khách hàng theo ID, không mở nhầm form thêm mới.
+- Khách đã xóa mềm được ẩn khỏi danh sách khách hàng và danh sách chọn khi bán hàng.
+- Chi tiết công nợ hiển thị số còn nợ của từng phiếu sau khi phân bổ các lần thu nợ.
+- Báo cáo ngày/tháng tự cập nhật khi sổ thu chi thay đổi, tổng hợp theo múi giờ địa
+  phương và không bị tràn ở cỡ chữ lớn.
+
 ## 30/07/2026 — Dọn dẹp & chốt kiến trúc dữ liệu (v2.0 → v3.0)
 
 ### Bối cảnh

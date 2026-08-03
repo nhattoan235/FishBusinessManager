@@ -210,6 +210,17 @@ Không được xóa sản phẩm đã phát sinh giao dịch.
 
 ---
 
+## BR-305
+
+Khi tạo sản phẩm mới, người dùng có thể nhập số lượng tồn kho ban đầu.
+
+Nếu số lượng lớn hơn 0, hệ thống phải tạo một bản ghi `inventory_entries`
+loại `adjustment` trong cùng Database Transaction với bản ghi sản phẩm.
+
+Không được ghi tồn kho trực tiếp vào bảng `products`.
+
+---
+
 # 6. Quy tắc bán hàng
 
 ## BR-401

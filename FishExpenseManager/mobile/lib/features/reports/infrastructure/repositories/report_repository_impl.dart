@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/report_entity.dart';
 import '../../domain/repositories/report_repository.dart';
@@ -10,157 +11,104 @@ class ReportRepositoryImpl implements ReportRepository {
 
   @override
   Future<List<MonthlyStatEntity>> getMonthlyStats(int year) async {
-    // Build start/end of year Unix timestamps
-    final startOfYear = DateTime(year, 1, 1);
-    final endOfYear = DateTime(year, 12, 31, 23, 59, 59);
+    final start = DateTime(year, 1, 1);
+    final endExclusive = DateTime(year + 1, 1, 1);
+    final transactions = await (_db.select(_db.transactions)
+          ..where((row) =>
+              row.date.isBiggerOrEqualValue(start) &
+              row.date.isSmallerThanValue(endExclusive)))
+        .get();
 
-    final startTs = startOfYear.millisecondsSinceEpoch ~/ 1000;
-    final endTs = endOfYear.millisecondsSinceEpoch ~/ 1000;
-
-    final result = await _db.customSelect(
-      '''
-      SELECT 
-        strftime('%m', datetime(date, 'unixepoch')) AS month,
-        SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END) AS total_income,
-        SUM(CASE WHEN is_income = 0 THEN amount ELSE 0 END) AS total_expense
-      FROM transactions
-      WHERE date >= ? AND date <= ?
-      GROUP BY month
-      ORDER BY month
-      ''',
-      variables: [Variable.withInt(startTs), Variable.withInt(endTs)],
-    ).get();
-
-    // Build all 12 months, filling with 0 for months with no data
-    final Map<int, MonthlyStatEntity> monthMap = {};
-    for (final row in result) {
-      final monthStr = row.data['month'] as String;
-      final month = int.parse(monthStr);
-      final income = (row.data['total_income'] as num?)?.toDouble() ?? 0.0;
-      final expense = (row.data['total_expense'] as num?)?.toDouble() ?? 0.0;
-      monthMap[month] = MonthlyStatEntity(
-        year: year,
-        month: month,
-        totalIncome: income,
-        totalExpense: expense,
-      );
+    final incomeByMonth = List<double>.filled(12, 0);
+    final expenseByMonth = List<double>.filled(12, 0);
+    for (final transaction in transactions) {
+      final localDate = transaction.date.toLocal();
+      final index = localDate.month - 1;
+      if (transaction.isIncome) {
+        incomeByMonth[index] += transaction.amount;
+      } else {
+        expenseByMonth[index] += transaction.amount;
+      }
     }
 
-    // Fill all months
-    return List.generate(12, (i) {
-      final month = i + 1;
-      return monthMap[month] ??
-          MonthlyStatEntity(
-            year: year,
-            month: month,
-            totalIncome: 0,
-            totalExpense: 0,
-          );
-    });
+    return List.generate(
+      12,
+      (index) => MonthlyStatEntity(
+        year: year,
+        month: index + 1,
+        totalIncome: incomeByMonth[index],
+        totalExpense: expenseByMonth[index],
+      ),
+    );
   }
 
   @override
   Future<List<DailyStatEntity>> getDailyStats(int year, int month) async {
-    final startOfMonth = DateTime(year, month, 1);
-    final endOfMonth = DateTime(year, month + 1, 0, 23, 59, 59);
-
-    final startTs = startOfMonth.millisecondsSinceEpoch ~/ 1000;
-    final endTs = endOfMonth.millisecondsSinceEpoch ~/ 1000;
-
-    final result = await _db.customSelect(
-      '''
-      SELECT 
-        strftime('%d', datetime(date, 'unixepoch')) AS day,
-        SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END) AS total_income,
-        SUM(CASE WHEN is_income = 0 THEN amount ELSE 0 END) AS total_expense
-      FROM transactions
-      WHERE date >= ? AND date <= ?
-      GROUP BY day
-      ORDER BY day
-      ''',
-      variables: [Variable.withInt(startTs), Variable.withInt(endTs)],
-    ).get();
-
-    final Map<int, DailyStatEntity> dayMap = {};
-    for (final row in result) {
-      final dayStr = row.data['day'] as String;
-      final day = int.parse(dayStr);
-      final income = (row.data['total_income'] as num?)?.toDouble() ?? 0.0;
-      final expense = (row.data['total_expense'] as num?)?.toDouble() ?? 0.0;
-      dayMap[day] = DailyStatEntity(
-        date: DateTime(year, month, day),
-        income: income,
-        expense: expense,
-      );
-    }
+    final start = DateTime(year, month, 1);
+    final endExclusive = DateTime(year, month + 1, 1);
+    final transactions = await (_db.select(_db.transactions)
+          ..where((row) =>
+              row.date.isBiggerOrEqualValue(start) &
+              row.date.isSmallerThanValue(endExclusive)))
+        .get();
 
     final daysInMonth = DateTime(year, month + 1, 0).day;
-    return List.generate(daysInMonth, (i) {
-      final day = i + 1;
-      return dayMap[day] ??
-          DailyStatEntity(
-            date: DateTime(year, month, day),
-            income: 0,
-            expense: 0,
-          );
-    });
+    final incomeByDay = List<double>.filled(daysInMonth, 0);
+    final expenseByDay = List<double>.filled(daysInMonth, 0);
+    for (final transaction in transactions) {
+      final localDate = transaction.date.toLocal();
+      final index = localDate.day - 1;
+      if (transaction.isIncome) {
+        incomeByDay[index] += transaction.amount;
+      } else {
+        expenseByDay[index] += transaction.amount;
+      }
+    }
+
+    return List.generate(
+      daysInMonth,
+      (index) => DailyStatEntity(
+        date: DateTime(year, month, index + 1),
+        income: incomeByDay[index],
+        expense: expenseByDay[index],
+      ),
+    );
   }
 
   @override
   Future<Map<String, double>> getProfitSummary() async {
     final now = DateTime.now();
-
-    // 1. Lãi trong tháng hiện tại
     final startOfMonth = DateTime(now.year, now.month, 1);
-    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    final nextMonth = DateTime(now.year, now.month + 1, 1);
+    final startOfSixMonths = DateTime(now.year, now.month - 5, 1);
 
-    final resultMonth = await _db.customSelect(
-      '''
-      SELECT 
-        SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END) AS total_income,
-        SUM(CASE WHEN is_income = 0 THEN amount ELSE 0 END) AS total_expense
-      FROM transactions
-      WHERE date >= ? AND date <= ?
-      ''',
-      variables: [
-        Variable.withInt(startOfMonth.millisecondsSinceEpoch ~/ 1000),
-        Variable.withInt(endOfMonth.millisecondsSinceEpoch ~/ 1000)
-      ],
-    ).getSingleOrNull();
+    final transactions = await (_db.select(_db.transactions)
+          ..where((row) =>
+              row.date.isBiggerOrEqualValue(startOfSixMonths) &
+              row.date.isSmallerThanValue(nextMonth)))
+        .get();
 
-    final mIncome =
-        (resultMonth?.data['total_income'] as num?)?.toDouble() ?? 0.0;
-    final mExpense =
-        (resultMonth?.data['total_expense'] as num?)?.toDouble() ?? 0.0;
-    final monthProfit = mIncome - mExpense;
-
-    // 2. Lãi trong quý (6 tháng qua) bao gồm cả tháng hiện tại
-    // Tính lùi 5 tháng + tháng này = 6 tháng
-    final startOfQuarter = DateTime(now.year, now.month - 5, 1);
-
-    final resultQuarter = await _db.customSelect(
-      '''
-      SELECT 
-        SUM(CASE WHEN is_income = 1 THEN amount ELSE 0 END) AS total_income,
-        SUM(CASE WHEN is_income = 0 THEN amount ELSE 0 END) AS total_expense
-      FROM transactions
-      WHERE date >= ? AND date <= ?
-      ''',
-      variables: [
-        Variable.withInt(startOfQuarter.millisecondsSinceEpoch ~/ 1000),
-        Variable.withInt(endOfMonth.millisecondsSinceEpoch ~/ 1000)
-      ],
-    ).getSingleOrNull();
-
-    final qIncome =
-        (resultQuarter?.data['total_income'] as num?)?.toDouble() ?? 0.0;
-    final qExpense =
-        (resultQuarter?.data['total_expense'] as num?)?.toDouble() ?? 0.0;
-    final quarterProfit = qIncome - qExpense;
+    var monthIncome = 0.0;
+    var monthExpense = 0.0;
+    var sixMonthIncome = 0.0;
+    var sixMonthExpense = 0.0;
+    for (final transaction in transactions) {
+      if (transaction.isIncome) {
+        sixMonthIncome += transaction.amount;
+        if (!transaction.date.isBefore(startOfMonth)) {
+          monthIncome += transaction.amount;
+        }
+      } else {
+        sixMonthExpense += transaction.amount;
+        if (!transaction.date.isBefore(startOfMonth)) {
+          monthExpense += transaction.amount;
+        }
+      }
+    }
 
     return {
-      'monthProfit': monthProfit,
-      'quarterProfit': quarterProfit,
+      'monthProfit': monthIncome - monthExpense,
+      'quarterProfit': sixMonthIncome - sixMonthExpense,
     };
   }
 }

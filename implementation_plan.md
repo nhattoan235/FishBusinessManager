@@ -208,6 +208,7 @@ feature/
 - [x] Repository: CRUD + soft delete
 - [x] UI danh sách: tên, SĐT, số nợ; tìm kiếm; thêm mới
 - [x] UI chi tiết: info khách + lịch sử mua + lịch sử thanh toán + nút Thu tiền
+- [x] Xóa mềm ẩn khách khỏi danh sách; chỉnh sửa tải đúng bản ghi theo ID
 
 #### 2.4 Bán hàng (SCR-005)
 - [x] Domain: `Sale`, `SaleItem` entities
@@ -221,12 +222,14 @@ feature/
   - Rollback nếu có lỗi
 - [x] Kiểm tra tồn kho trước khi lưu (BR-802)
 - [x] UI: chọn khách, chọn SP, nhập SL + đơn giá (auto-fill), tổng tiền, tiền trả, còn nợ
+- [x] Tạo và giữ ID khách hàng mới ngay khi xác nhận tên + SĐT trong màn hình bán hàng
 
 #### 2.5 Công nợ (SCR-011)
 - [x] Domain: `CustomerBalance`, `DebtTransaction` entities
 - [x] Use Case: `CollectDebtUseCase` (tạo giao dịch Thu + cập nhật số dư)
 - [x] UI danh sách: tên + số nợ + ngày gần nhất; filter (còn nợ / đã TT)
 - [x] UI thu tiền: chọn khách, nhập số tiền (không vượt số nợ - BR-503)
+- [x] Chi tiết từng thẻ công nợ hiển thị số còn nợ sau khi phân bổ thu nợ
 
 **Output**: Có thể dùng để ghi nhận bán hàng, thu chi, xem công nợ hằng ngày.
 
@@ -243,6 +246,7 @@ feature/
 #### 3.2 Sản phẩm (SCR-008, SCR-009)
 - [x] Danh mục sản phẩm, đơn vị tính
 - [x] CRUD sản phẩm (tuân thủ BR-301 → BR-304)
+- [x] Nhập tồn kho ban đầu khi tạo sản phẩm (ghi qua Inventory Ledger)
 - [x] Chi tiết: lịch sử nhập/bán, tồn kho hiện tại
 
 #### 3.3 Kho hàng (SCR-010)
@@ -294,6 +298,8 @@ feature/
 #### 4.4 Báo cáo nâng cao
 - [x] Thống kê theo tháng (tổng thu, tổng chi, lãi/lỗ)
 - [x] Biểu đồ đơn giản
+- [x] Báo cáo ngày/tháng tự cập nhật theo sổ thu chi và múi giờ địa phương
+- [x] Giao diện báo cáo không tràn khi tăng cỡ chữ
 
 **Output**: Ứng dụng production-ready, dữ liệu an toàn tối đa.
 

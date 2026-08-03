@@ -22,6 +22,13 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
+  Stream<CustomerEntity?> watchCustomerById(int id) {
+    return _dao.watchCustomerById(id).map(
+          (customer) => customer == null ? null : _map(customer),
+        );
+  }
+
+  @override
   Future<void> saveCustomer(CustomerEntity customer) async {
     final companion = CustomersCompanion(
       uuid: Value(customer.uuid),
@@ -58,7 +65,10 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
   @override
   Future<void> deleteCustomer(int id) async {
-    await _dao.softDeleteCustomer(id);
+    final affectedRows = await _dao.softDeleteCustomer(id);
+    if (affectedRows != 1) {
+      throw StateError('Không tìm thấy khách hàng cần xóa.');
+    }
   }
 
   CustomerEntity _map(CustomerData data) {

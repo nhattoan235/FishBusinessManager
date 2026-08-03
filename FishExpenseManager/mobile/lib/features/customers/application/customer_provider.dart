@@ -13,3 +13,8 @@ final customersProvider = StreamProvider<List<CustomerEntity>>((ref) {
   final repo = ref.watch(customerRepositoryProvider);
   return repo.watchAllCustomers();
 });
+
+final customerByIdProvider =
+    StreamProvider.autoDispose.family<CustomerEntity?, int>((ref, customerId) {
+  return ref.watch(customerRepositoryProvider).watchCustomerById(customerId);
+});

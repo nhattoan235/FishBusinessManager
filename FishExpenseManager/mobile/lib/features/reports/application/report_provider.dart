@@ -16,22 +16,46 @@ final selectedYearProvider = StateProvider<int>((ref) => DateTime.now().year);
 final selectedMonthProvider = StateProvider<int>((ref) => DateTime.now().month);
 
 /// Provider thống kê tháng trong năm
-final monthlyStatsProvider = FutureProvider<List<MonthlyStatEntity>>((ref) {
+final monthlyStatsProvider =
+    StreamProvider.autoDispose<List<MonthlyStatEntity>>((ref) {
   final year = ref.watch(selectedYearProvider);
-  return ref.watch(reportRepositoryProvider).getMonthlyStats(year);
+  final db = ref.watch(databaseProvider);
+  final repository = ref.watch(reportRepositoryProvider);
+  return db
+      .customSelect(
+        'SELECT COUNT(*) AS transaction_count FROM transactions',
+        readsFrom: {db.transactions},
+      )
+      .watch()
+      .asyncMap((_) => repository.getMonthlyStats(year));
 });
 
 /// Provider thống kê ngày trong tháng
-final dailyStatsProvider = FutureProvider<List<DailyStatEntity>>((ref) {
+final dailyStatsProvider =
+    StreamProvider.autoDispose<List<DailyStatEntity>>((ref) {
   final year = ref.watch(selectedYearProvider);
   final month = ref.watch(selectedMonthProvider);
-  return ref.watch(reportRepositoryProvider).getDailyStats(year, month);
+  final db = ref.watch(databaseProvider);
+  final repository = ref.watch(reportRepositoryProvider);
+  return db
+      .customSelect(
+        'SELECT COUNT(*) AS transaction_count FROM transactions',
+        readsFrom: {db.transactions},
+      )
+      .watch()
+      .asyncMap((_) => repository.getDailyStats(year, month));
 });
 
 /// Provider tổng kết Lãi tháng và quý
-final profitSummaryProvider = FutureProvider<Map<String, double>>((ref) {
-  // Watch year/month so it refreshes when user changes time, though it always computes from 'now' in repository.
-  // Actually, to make it react to transactions, we might need to invalidate it on sale. 
-  // For now, it's fetched once when screen opens.
-  return ref.watch(reportRepositoryProvider).getProfitSummary();
+final profitSummaryProvider =
+    StreamProvider.autoDispose<Map<String, double>>((ref) {
+  final db = ref.watch(databaseProvider);
+  final repository = ref.watch(reportRepositoryProvider);
+  return db
+      .customSelect(
+        'SELECT COUNT(*) AS transaction_count FROM transactions',
+        readsFrom: {db.transactions},
+      )
+      .watch()
+      .asyncMap((_) => repository.getProfitSummary());
 });

@@ -2,6 +2,9 @@ import 'package:fish_business_manager/app/theme/app_theme.dart';
 import 'package:fish_business_manager/features/customers/application/customer_provider.dart';
 import 'package:fish_business_manager/features/products/application/product_provider.dart';
 import 'package:fish_business_manager/features/products/domain/entities/product_entity.dart';
+import 'package:fish_business_manager/features/reports/application/report_provider.dart';
+import 'package:fish_business_manager/features/reports/domain/entities/report_entity.dart';
+import 'package:fish_business_manager/features/reports/presentation/screens/report_screen.dart';
 import 'package:fish_business_manager/features/sales/presentation/screens/sale_screen.dart';
 import 'package:fish_business_manager/features/transactions/application/transaction_provider.dart';
 import 'package:fish_business_manager/features/transactions/presentation/screens/transaction_list_screen.dart';
@@ -84,6 +87,48 @@ void main() {
 
     expect(find.textContaining('Chứng nước loại đặc biệt'), findsOneWidget);
     expect(find.textContaining('Tồn kho: 123456 kg'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('thẻ lãi tháng và sáu tháng không tràn khi chữ lớn',
+      (tester) async {
+    await useNarrowLargeTextScreen(tester);
+    final year = DateTime.now().year;
+    final monthlyStats = List.generate(
+      12,
+      (index) => MonthlyStatEntity(
+        year: year,
+        month: index + 1,
+        totalIncome: index == 0 ? 123456789 : 0,
+        totalExpense: index == 0 ? 23456789 : 0,
+      ),
+    );
+
+    await tester.pumpWidget(
+      app(
+        const ReportScreen(),
+        systemTextScale: 2,
+        overrides: [
+          monthlyStatsProvider.overrideWith(
+            (ref) => Stream.value(monthlyStats),
+          ),
+          dailyStatsProvider.overrideWith(
+            (ref) => Stream.value(const []),
+          ),
+          profitSummaryProvider.overrideWith(
+            (ref) => Stream.value({
+              'monthProfit': 100000000,
+              'quarterProfit': 600000000,
+            }),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Theo tháng'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Lãi trong tháng'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

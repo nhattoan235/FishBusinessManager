@@ -42,8 +42,9 @@ endif
 if (Khách hàng đã có trong danh sách?) then (Có)
   :Chọn Khách hàng từ danh sách;
 else (Không)
-  :Nhập nhanh thông tin Khách hàng mới (Tên bắt buộc);
-  :Lưu thông tin Khách hàng mới vào hệ thống;
+  :Nhập nhanh thông tin Khách hàng mới (Tên và SĐT bắt buộc);
+  :Xác nhận và lưu Khách hàng mới ngay vào hệ thống;
+  :Giữ ID Khách hàng vừa tạo để lập Phiếu bán;
 endif
 
 repeat

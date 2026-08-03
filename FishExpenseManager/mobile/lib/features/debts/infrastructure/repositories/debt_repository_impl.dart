@@ -91,6 +91,7 @@ class DebtRepositoryImpl implements DebtRepository {
         isIncome: const Value(true),
         type: 'Thu nợ',
         description: const Value('Thu nợ khách hàng'),
+        referenceId: Value(customerId.toString()),
         date: date,
         createdAt: Value(DateTime.now()),
       ));

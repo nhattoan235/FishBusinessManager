@@ -7,7 +7,6 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/database/providers/database_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/utils/date_formatter.dart';
-import '../../application/debt_provider.dart';
 import '../../../customers/application/customer_provider.dart';
 
 // --- Data Models ---
@@ -52,17 +51,53 @@ class DebtSaleItem {
 }
 
 // --- Provider ---
-final debtDetailProvider = StreamProvider.family<List<DebtTransactionDetail>, int>((ref, customerId) async* {
+final debtDetailProvider = StreamProvider.autoDispose
+    .family<List<DebtTransactionDetail>, int>((ref, customerId) {
   final db = ref.watch(databaseProvider);
 
-  // Watch all sales for this customer that have debt > 0
-  final salesStream = (db.select(db.saleDocuments)
-        ..where((t) => t.customerId.equals(customerId) & t.debtAmount.isBiggerThanValue(0))
-        ..orderBy([(t) => drift.OrderingTerm(expression: t.saleDate, mode: drift.OrderingMode.desc)]))
-      .watch();
+  final changes = db.customSelect(
+    'SELECT ? AS customer_id',
+    variables: [drift.Variable.withInt(customerId)],
+    readsFrom: {
+      db.saleDocuments,
+      db.saleItems,
+      db.products,
+      db.debtTransactions,
+    },
+  ).watch();
 
-  await for (final sales in salesStream) {
-    List<DebtTransactionDetail> details = [];
+  return changes.asyncMap((_) async {
+    final sales = await (db.select(db.saleDocuments)
+          ..where((t) =>
+              t.customerId.equals(customerId) &
+              t.debtAmount.isBiggerThanValue(0))
+          ..orderBy([
+            (t) => drift.OrderingTerm(
+                  expression: t.saleDate,
+                  mode: drift.OrderingMode.asc,
+                ),
+            (t) => drift.OrderingTerm.asc(t.id),
+          ]))
+        .get();
+
+    final payments = await (db.select(db.debtTransactions)
+          ..where((t) =>
+              t.customerId.equals(customerId) &
+              t.changeType.equals('decrease')))
+        .get();
+    var unallocatedPayment = payments
+        .where((payment) => payment.saleDocumentId == null)
+        .fold<int>(0, (sum, payment) => sum + payment.amount);
+    final paymentBySale = <int, int>{};
+    for (final payment in payments.where((p) => p.saleDocumentId != null)) {
+      paymentBySale.update(
+        payment.saleDocumentId!,
+        (value) => value + payment.amount,
+        ifAbsent: () => payment.amount,
+      );
+    }
+
+    final details = <DebtTransactionDetail>[];
 
     for (final sale in sales) {
       // Fetch items for this sale
@@ -86,19 +121,27 @@ final debtDetailProvider = StreamProvider.family<List<DebtTransactionDetail>, in
         );
       }).toList();
 
+      var remainingDebt = sale.debtAmount - (paymentBySale[sale.id] ?? 0);
+      if (remainingDebt < 0) remainingDebt = 0;
+      final allocated = unallocatedPayment < remainingDebt
+          ? unallocatedPayment
+          : remainingDebt;
+      remainingDebt -= allocated;
+      unallocatedPayment -= allocated;
+
       details.add(DebtTransactionDetail(
         saleId: sale.id,
         saleDate: sale.saleDate,
         totalAmount: sale.totalAmount,
         paidAmount: sale.paidAmount,
-        debtAmount: sale.debtAmount,
+        debtAmount: remainingDebt,
         note: sale.note,
         items: items,
       ));
     }
 
-    yield details;
-  }
+    return details.reversed.toList();
+  });
 });
 
 // --- UI ---
@@ -135,7 +178,8 @@ class DebtDetailScreen extends ConsumerWidget {
       body: detailsAsync.when(
         data: (details) {
           if (details.isEmpty) {
-            return const Center(child: Text('Khách hàng này không có giao dịch nợ nào.'));
+            return const Center(
+                child: Text('Khách hàng này không có giao dịch nợ nào.'));
           }
 
           return ListView.builder(
@@ -154,10 +198,18 @@ class DebtDetailScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 4),
-                      Text('Mặt hàng: ${item.summaryProducts}', style: const TextStyle(color: Colors.black87)),
+                      Text('Mặt hàng: ${item.summaryProducts}',
+                          style: const TextStyle(color: Colors.black87)),
                       const SizedBox(height: 4),
-                      Text('Đã trả: ${CurrencyFormatter.format(item.paidAmount.toDouble())}',
-                          style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w500)),
+                      Text(
+                        'Còn nợ: ${CurrencyFormatter.format(item.debtAmount.toDouble())}',
+                        style: TextStyle(
+                          color: item.debtAmount > 0
+                              ? AppColors.error
+                              : AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                   children: [
@@ -167,23 +219,29 @@ class DebtDetailScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Text('Chi tiết mua hàng:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text('Chi tiết mua hàng:',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: AppSpacing.sm),
                           // List of products
                           ...item.items.map((prod) => Padding(
-                                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                                padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.xs),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    const Text('• ',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                     Expanded(
                                       child: Text(
                                         '${prod.productName}\n${prod.quantity} kg x ${CurrencyFormatter.format(prod.unitPrice.toDouble())}',
                                       ),
                                     ),
                                     Text(
-                                      CurrencyFormatter.format(prod.totalPrice.toDouble()),
-                                      style: const TextStyle(fontWeight: FontWeight.w500),
+                                      CurrencyFormatter.format(
+                                          prod.totalPrice.toDouble()),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w500),
                                     ),
                                   ],
                                 ),
@@ -191,9 +249,22 @@ class DebtDetailScreen extends ConsumerWidget {
                           const SizedBox(height: AppSpacing.sm),
                           const Divider(),
                           const SizedBox(height: AppSpacing.sm),
-                          _buildDetailRow('Tổng cộng:', CurrencyFormatter.format(item.totalAmount.toDouble()), isBold: true),
-                          _buildDetailRow('Đã thanh toán:', CurrencyFormatter.format(item.paidAmount.toDouble()), color: AppColors.success),
-                          _buildDetailRow('Còn nợ phiếu này:', CurrencyFormatter.format(item.debtAmount.toDouble()), color: AppColors.error, isBold: true),
+                          _buildDetailRow(
+                              'Tổng cộng:',
+                              CurrencyFormatter.format(
+                                  item.totalAmount.toDouble()),
+                              isBold: true),
+                          _buildDetailRow(
+                              'Đã thanh toán:',
+                              CurrencyFormatter.format(
+                                  item.paidAmount.toDouble()),
+                              color: AppColors.success),
+                          _buildDetailRow(
+                              'Còn nợ phiếu này:',
+                              CurrencyFormatter.format(
+                                  item.debtAmount.toDouble()),
+                              color: AppColors.error,
+                              isBold: true),
                           if (item.note != null && item.note!.isNotEmpty) ...[
                             const SizedBox(height: AppSpacing.sm),
                             _buildDetailRow('Ghi chú:', item.note!),
@@ -218,13 +289,16 @@ class DebtDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {bool isBold = false, Color? color}) {
+  Widget _buildDetailRow(String label, String value,
+      {bool isBold = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(label,
+              style: TextStyle(
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
           Text(
             value,
             style: TextStyle(

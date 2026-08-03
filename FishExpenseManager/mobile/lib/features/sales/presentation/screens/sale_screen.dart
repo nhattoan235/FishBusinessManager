@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/currency_formatter.dart';
@@ -28,6 +29,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
   String _customerSearchText = '';
   TextEditingController? _autocompleteController;
   ProductEntity? _selectedProduct;
+  bool _isSaving = false;
 
   double get _totalAmount {
     final qty = double.tryParse(_qtyController.text) ?? 0;
@@ -48,97 +50,124 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     super.dispose();
   }
 
-  void _save() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    // Nếu chưa chọn ID mà có text, hỏi tạo mới
-    if (_selectedCustomerId == null && _customerSearchText.isNotEmpty) {
-      final phoneController = TextEditingController();
-      final formKey = GlobalKey<FormState>();
-
-      final result = await showDialog<String?>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Tạo Khách hàng mới'),
-          content: StatefulBuilder(
-            builder: (context, setState) {
-              return Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Khách hàng "$_customerSearchText" chưa có.\nBạn có muốn tạo mới không?'),
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Số điện thoại *',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone),
-                      ),
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return 'Vui lòng nhập số điện thoại';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, null),
-              child: const Text('Không'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  Navigator.pop(ctx, phoneController.text.trim());
-                }
-              },
-              child: const Text('Có'),
-            ),
-          ],
-        ),
+  Future<bool> _resolveCustomer() async {
+    final customerName = _customerSearchText.trim();
+    if (_selectedCustomerId != null) return true;
+    if (customerName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập khách hàng')),
       );
+      return false;
+    }
 
-      if (result == null) return; // Người dùng chọn Không hoặc huỷ
+    final phoneController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
-      try {
-        final newCustomer = CustomerEntity(
-          uuid: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: _customerSearchText,
-          phone: result, // Sử dụng số điện thoại vừa nhập
-          address: '',
-          note: '',
-          isActive: true, // Đảm bảo trạng thái active
-          createdAt: DateTime.now(),
-        );
-        final createdId =
-            await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
-        setState(() => _selectedCustomerId = createdId);
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Lỗi tạo KH: $e')));
-        }
-        return;
+    final result = await showDialog<String?>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Tạo Khách hàng mới'),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            return Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Khách hàng "$customerName" chưa có.\n'
+                      'Xác nhận tạo khách hàng ngay bây giờ?'),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Số điện thoại *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.phone),
+                    ),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Vui lòng nhập số điện thoại';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: const Text('Không'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(ctx, phoneController.text.trim());
+              }
+            },
+            child: const Text('Có'),
+          ),
+        ],
+      ),
+    );
+    phoneController.dispose();
+
+    if (result == null || !mounted) return false;
+
+    try {
+      final newCustomer = CustomerEntity(
+        uuid: const Uuid().v4(),
+        name: customerName,
+        phone: result,
+        isActive: true,
+        createdAt: DateTime.now(),
+      );
+      final createdId =
+          await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
+      if (!mounted) return false;
+      setState(() {
+        _selectedCustomerId = createdId;
+        _customerSearchText = customerName;
+        _autocompleteController?.text = customerName;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Đã tạo khách hàng $customerName')),
+      );
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Lỗi tạo KH: $e')));
       }
+      return false;
+    }
+  }
+
+  void _save() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
+    final hasCustomer = await _resolveCustomer();
+    if (!mounted) return;
+    if (!hasCustomer || !_formKey.currentState!.validate()) {
+      setState(() => _isSaving = false);
+      return;
     }
 
     if (_selectedCustomerId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Vui lòng chọn hoặc nhập khách hàng')));
+      setState(() => _isSaving = false);
       return;
     }
     if (_selectedProduct == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Vui lòng chọn sản phẩm')));
+      setState(() => _isSaving = false);
       return;
     }
 
@@ -150,11 +179,13 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
     if (qty <= 0 || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Số lượng và đơn giá phải > 0')));
+      setState(() => _isSaving = false);
       return;
     }
     if (paid > total) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Tiền trả không được lớn hơn tổng tiền')));
+      setState(() => _isSaving = false);
       return;
     }
 
@@ -166,6 +197,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
             'Lỗi: Số lượng bán ($qty) vượt quá tồn kho hiện tại ($currentStock)'),
         backgroundColor: AppColors.error,
       ));
+      setState(() => _isSaving = false);
       return;
     }
 
@@ -193,6 +225,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
         _priceController.clear();
         _paidController.clear();
         setState(() {
+          _isSaving = false;
           _selectedCustomerId = null;
           _customerSearchText = '';
           _selectedProduct = null;
@@ -203,6 +236,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isSaving = false);
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Lỗi: $e')));
       }
@@ -265,23 +299,24 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
                     },
                     fieldViewBuilder:
                         (context, controller, focusNode, onFieldSubmitted) {
-                      if (_autocompleteController != controller) {
-                        _autocompleteController = controller;
-                        controller.addListener(() {
-                          _customerSearchText = controller.text;
-                          final match = customers
-                              .where((c) =>
-                                  c.name.toLowerCase().withoutDiacritics ==
-                                  controller.text
-                                      .toLowerCase()
-                                      .withoutDiacritics)
-                              .firstOrNull;
-                          _selectedCustomerId = match?.id;
-                        });
-                      }
+                      _autocompleteController = controller;
                       return TextFormField(
                         controller: controller,
                         focusNode: focusNode,
+                        onChanged: (value) {
+                          _customerSearchText = value;
+                          final normalized =
+                              value.trim().toLowerCase().withoutDiacritics;
+                          final match = customers
+                              .where((c) =>
+                                  c.name
+                                      .trim()
+                                      .toLowerCase()
+                                      .withoutDiacritics ==
+                                  normalized)
+                              .firstOrNull;
+                          _selectedCustomerId = match?.id;
+                        },
                         decoration: const InputDecoration(
                           labelText: 'Khách hàng *',
                           hintText: 'Tìm hoặc nhập khách hàng mới',
@@ -482,7 +517,7 @@ class _SaleScreenState extends ConsumerState<SaleScreen> {
               const SizedBox(height: AppSpacing.xl),
 
               ElevatedButton.icon(
-                onPressed: _save,
+                onPressed: _isSaving ? null : _save,
                 icon: const Icon(Icons.check, color: Colors.white),
                 label: const Text('Lưu Phiếu Bán Hàng',
                     style: TextStyle(color: Colors.white, fontSize: 16)),

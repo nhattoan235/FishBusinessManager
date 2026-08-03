@@ -14,8 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../utils/test_utils.dart';
 
 void main() {
-  group(
-      'Customer Management Flow Tests — UC-006/UC-007 Quản lý Khách hàng',
+  group('Customer Management Flow Tests — UC-006/UC-007 Quản lý Khách hàng',
       () {
     // ─── UC-006: Thêm Khách hàng ──────────────────────────────────────────────
 
@@ -47,7 +46,8 @@ void main() {
           reason: 'Khách hàng mới phải ở trạng thái active');
     });
 
-    test('Thêm khách hàng - Chỉ cần tên, các trường khác không bắt buộc (BR-101)',
+    test(
+        'Thêm khách hàng - Chỉ cần tên, các trường khác không bắt buộc (BR-101)',
         () async {
       final container = createTestProviderContainer();
       addTearDown(container.dispose);
@@ -161,7 +161,8 @@ void main() {
       final allCustomers = await customerRepo.getAllCustomers();
       final lockedCustomer = allCustomers.firstWhere((c) => c.id == customerId);
       expect(lockedCustomer.isActive, false,
-          reason: 'Khách đã có giao dịch chỉ được khóa, không xóa (BR-103/104)');
+          reason:
+              'Khách đã có giao dịch chỉ được khóa, không xóa (BR-103/104)');
     });
 
     test('Xóa mềm khách hàng chưa có giao dịch (BR-104)', () async {
@@ -190,11 +191,19 @@ void main() {
       expect(rawData, m.isNotNull, reason: 'Soft delete không xóa vật lý');
       expect(rawData!.isActive, false,
           reason: 'is_active phải = false sau khi xóa/khóa');
+
+      final visibleCustomers = await customerRepo.watchAllCustomers().first;
+      expect(
+        visibleCustomers.any((customer) => customer.id == customerId),
+        false,
+        reason: 'Khách đã xóa mềm không được còn xuất hiện trong danh sách',
+      );
     });
 
     // ─── UC-007: Danh sách Khách hàng ────────────────────────────────────────
 
-    test('Danh sách khách hàng - Khách bị khóa không xuất hiện mặc định (BR-103)',
+    test(
+        'Danh sách khách hàng - Khách bị khóa không xuất hiện mặc định (BR-103)',
         () async {
       final container = createTestProviderContainer();
       addTearDown(container.dispose);
@@ -222,8 +231,7 @@ void main() {
 
       // watchAllCustomers mặc định - hành vi phụ thuộc vào cài đặt filter
       final allCustomers = await customerRepo.getAllCustomers();
-      final lockedCustomer =
-          allCustomers.firstWhere((c) => c.id == lockedId);
+      final lockedCustomer = allCustomers.firstWhere((c) => c.id == lockedId);
       expect(lockedCustomer.isActive, false,
           reason: 'Khách bị khóa phải có is_active = false');
     });

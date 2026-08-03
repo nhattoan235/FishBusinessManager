@@ -122,9 +122,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/customers/edit/:id',
         builder: (context, state) {
-          // For edit, we'll push the AddCustomerScreen in edit mode
-          // This would need customer data passed - simplified for now
-          return const AddCustomerScreen();
+          final id = int.parse(state.pathParameters['id']!);
+          return EditCustomerScreen(customerId: id);
         },
       ),
       GoRoute(

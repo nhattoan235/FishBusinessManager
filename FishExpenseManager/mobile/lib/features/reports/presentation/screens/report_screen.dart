@@ -50,8 +50,32 @@ class _ReportScreenState extends ConsumerState<ReportScreen>
           indicatorColor: Colors.yellow,
           indicatorWeight: 4,
           tabs: const [
-            Tab(text: 'Theo tháng', icon: Icon(Icons.bar_chart, size: 28)),
-            Tab(text: 'Theo ngày', icon: Icon(Icons.show_chart, size: 28)),
+            Tab(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.bar_chart, size: 22),
+                    SizedBox(width: 6),
+                    Text('Theo tháng'),
+                  ],
+                ),
+              ),
+            ),
+            Tab(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.show_chart, size: 22),
+                    SizedBox(width: 6),
+                    Text('Theo ngày'),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
         actions: [
@@ -360,9 +384,15 @@ class _SummaryCard extends StatelessWidget {
                 children: [
                   Icon(icon, color: color, size: 18),
                   const SizedBox(width: 4),
-                  Text(label,
-                      style:
-                          TextStyle(color: color, fontWeight: FontWeight.w600)),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 4),
@@ -436,27 +466,33 @@ class _ProfitSummaryCard extends ConsumerWidget {
     final icon = isProfit ? Icons.trending_up : Icons.trending_down;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              label,
-              style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87),
+        Icon(icon, color: color, size: 24),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-          ],
+          ),
         ),
-        Text(
-          CurrencyFormatter.format(profit),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900, // Very bold
-            color: color,
+        const SizedBox(width: AppSpacing.sm),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              CurrencyFormatter.format(profit),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: color,
+              ),
+            ),
           ),
         ),
       ],

@@ -473,6 +473,10 @@ Sau khi lưu
 
 Hiển thị thông báo thành công.
 
+Nếu tên khách chưa tồn tại, hệ thống yêu cầu số điện thoại và xác nhận. Ngay khi
+xác nhận, khách hàng phải được lưu vào `customers` và ID vừa tạo được giữ lại để
+lập phiếu bán; lỗi validation ở phần sản phẩm không được làm mất khách vừa tạo.
+
 ---
 
 # 8. SCR-006 — Danh sách khách hàng
@@ -488,6 +492,7 @@ Có:
 - Tìm kiếm
 - Thêm khách
 - Chỉnh sửa
+- Xóa mềm; khách đã xóa không còn xuất hiện trong danh sách hoặc ô chọn bán hàng
 
 ---
 
@@ -534,6 +539,10 @@ Có:
 - Thêm
 - Sửa
 - Tìm kiếm
+
+Khi thêm sản phẩm mới, form cho phép nhập số lượng tồn kho ban đầu. Số lượng
+này được ghi vào lịch sử kho; khi sửa sản phẩm, người dùng phải dùng chức năng
+Điều chỉnh kho để thay đổi tồn kho.
 
 ---
 
@@ -610,6 +619,12 @@ Có nút
 Thu tiền
 
 ```
+
+---
+
+Mỗi thẻ ở SCR-011 mở màn hình chi tiết. Chi tiết hiển thị ngày, mặt hàng và
+**còn nợ của phiếu** sau khi tính các lần thu nợ, không dùng số "đã trả" làm
+thông tin chính trên thẻ.
 
 ---
 

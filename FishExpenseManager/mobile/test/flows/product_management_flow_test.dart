@@ -50,10 +50,44 @@ void main() {
           reason: 'Sản phẩm phải thuộc đúng 1 danh mục (BR-301)');
       expect(found.unitId, unit.id,
           reason: 'Sản phẩm phải có đúng 1 đơn vị (BR-302)');
-      expect(found.isActive, true,
-          reason: 'Sản phẩm mới phải là active');
+      expect(found.isActive, true, reason: 'Sản phẩm mới phải là active');
       expect(found.defaultPrice, 8000,
           reason: 'Giá bán mặc định phải được lưu');
+    });
+
+    test('Thêm sản phẩm kèm tồn kho ban đầu tạo đúng một bản ghi Ledger',
+        () async {
+      final container = createTestProviderContainer();
+      addTearDown(container.dispose);
+
+      final db = container.read(databaseProvider);
+      final productRepo = container.read(productRepositoryProvider);
+      final category = (await productRepo.getCategories()).first;
+      final unit = (await productRepo.getUnits()).first;
+
+      await productRepo.saveProduct(
+        ProductEntity(
+          uuid: const Uuid().v4(),
+          categoryId: category.id,
+          unitId: unit.id,
+          name: 'Sản phẩm có tồn đầu',
+          isActive: true,
+          createdAt: DateTime.now(),
+        ),
+        initialStock: 25.5,
+      );
+
+      final product = (await productRepo.getAllProducts())
+          .singleWhere((item) => item.name == 'Sản phẩm có tồn đầu');
+      expect(product.currentStock, 25.5);
+
+      final entries = await (db.select(db.inventoryEntries)
+            ..where((row) => row.productId.equals(product.id!)))
+          .get();
+      expect(entries, hasLength(1));
+      expect(entries.single.entryType, 'adjustment');
+      expect(entries.single.quantity, 25.5);
+      expect(entries.single.note, 'Tồn kho ban đầu khi tạo sản phẩm');
     });
 
     test('Lấy danh sách danh mục sản phẩm từ seed data', () async {
@@ -109,8 +143,7 @@ void main() {
       );
 
       final updated = await productRepo.getAllProducts();
-      final updatedProduct =
-          updated.firstWhere((p) => p.id == chungnuoc.id);
+      final updatedProduct = updated.firstWhere((p) => p.id == chungnuoc.id);
       expect(updatedProduct.defaultPrice, 30000,
           reason: 'Giá bán phải được cập nhật');
       expect(updatedProduct.note, 'Giá cập nhật tháng 8');

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/database/dao/product_dao.dart';
 import '../../domain/entities/product_entity.dart';
@@ -95,7 +96,23 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<void> saveProduct(ProductEntity product) async {
+  Future<void> saveProduct(
+    ProductEntity product, {
+    double initialStock = 0,
+  }) async {
+    if (!initialStock.isFinite || initialStock < 0) {
+      throw ArgumentError.value(
+        initialStock,
+        'initialStock',
+        'Tồn kho ban đầu phải là số không âm.',
+      );
+    }
+    if (product.id != null && initialStock != 0) {
+      throw StateError(
+        'Không thay đổi tồn kho khi sửa sản phẩm. Hãy dùng chức năng điều chỉnh kho.',
+      );
+    }
+
     final companion = ProductsCompanion(
       uuid: Value(product.uuid),
       categoryId: Value(product.categoryId),
@@ -108,11 +125,25 @@ class ProductRepositoryImpl implements ProductRepository {
       updatedAt: Value(DateTime.now()),
     );
 
-    if (product.id == null) {
-      await _dao.insertProduct(companion);
-    } else {
-      await _dao.updateProduct(companion.copyWith(id: Value(product.id!)));
-    }
+    await _db.transaction(() async {
+      if (product.id == null) {
+        final productId = await _dao.insertProduct(companion);
+        if (initialStock > 0) {
+          await _db.inventoryDao.insertEntry(
+            InventoryEntriesCompanion.insert(
+              uuid: const Uuid().v4(),
+              productId: productId,
+              entryType: 'adjustment',
+              quantity: initialStock,
+              note: const Value('Tồn kho ban đầu khi tạo sản phẩm'),
+              createdAt: Value(DateTime.now()),
+            ),
+          );
+        }
+      } else {
+        await _dao.updateProduct(companion.copyWith(id: Value(product.id!)));
+      }
+    });
   }
 
   @override

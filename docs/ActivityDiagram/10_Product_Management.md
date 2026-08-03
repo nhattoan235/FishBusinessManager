@@ -35,6 +35,7 @@ if (Thao tác muốn thực hiện?) then (Thêm Sản phẩm mới)
   :Người dùng chọn Danh mục sản phẩm (bảng product_categories) - BR-301;
   :Người dùng chọn Đơn vị tính mặc định (bảng units) - BR-302;
   :Người dùng nhập Giá bán mặc định (không bắt buộc);
+  :Người dùng nhập Số lượng tồn kho ban đầu (không bắt buộc - BR-305);
   :Bấm nút "Lưu Sản phẩm";
 
   partition "Kiểm tra dữ liệu (Validation)" {
@@ -51,7 +52,13 @@ if (Thao tác muốn thực hiện?) then (Thêm Sản phẩm mới)
     endif
   }
 
-  :Thêm bản ghi mới vào bảng products (is_active = 1);
+  partition "Lưu sản phẩm và tồn kho ban đầu" {
+    :Thêm bản ghi mới vào bảng products (is_active = 1);
+    if (Tồn kho ban đầu > 0?) then (Có)
+      :Thêm inventory_entries loại adjustment trong cùng Database Transaction;
+    else (Không)
+    endif
+  }
   :Hiển thị thông báo "Đã thêm sản phẩm mới thành công";
   :Cập nhật danh sách hiển thị trên SCR-008;
   stop
@@ -91,3 +98,4 @@ endif
 | BR-302 | Một sản phẩm có một đơn vị tính mặc định (`units`) |
 | BR-303 | Sản phẩm ngừng kinh doanh: Không xuất hiện khi bán mới, giữ nguyên lịch sử |
 | BR-304 | Không được xóa sản phẩm đã từng phát sinh giao dịch bán hoặc kho |
+| BR-305 | Tồn kho ban đầu phải được ghi qua inventory_entries trong cùng transaction tạo sản phẩm |

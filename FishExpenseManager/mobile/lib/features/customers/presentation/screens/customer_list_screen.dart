@@ -29,15 +29,19 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
         children: [
           // Search bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm theo tên, SĐT...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               ),
-              onChanged: (val) => setState(() => _searchQuery = val.toLowerCase().withoutDiacritics),
+              onChanged: (val) => setState(
+                  () => _searchQuery = val.toLowerCase().withoutDiacritics),
             ),
           ),
           // Customer list
@@ -46,20 +50,31 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               data: (customers) {
                 final filtered = _searchQuery.isEmpty
                     ? customers
-                    : customers.where((c) =>
-                        c.name.toLowerCase().withoutDiacritics.contains(_searchQuery) ||
-                        (c.phone?.toLowerCase().withoutDiacritics.contains(_searchQuery) ?? false)
-                      ).toList();
+                    : customers
+                        .where((c) =>
+                            c.name
+                                .toLowerCase()
+                                .withoutDiacritics
+                                .contains(_searchQuery) ||
+                            (c.phone
+                                    ?.toLowerCase()
+                                    .withoutDiacritics
+                                    .contains(_searchQuery) ??
+                                false))
+                        .toList();
 
                 if (filtered.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
+                        Icon(Icons.people_outline,
+                            size: 64, color: Colors.grey.shade400),
                         const SizedBox(height: AppSpacing.md),
                         Text(
-                          _searchQuery.isEmpty ? 'Chưa có khách hàng nào.' : 'Không tìm thấy khách hàng.',
+                          _searchQuery.isEmpty
+                              ? 'Chưa có khách hàng nào.'
+                              : 'Không tìm thấy khách hàng.',
                           style: TextStyle(color: Colors.grey.shade600),
                         ),
                       ],
@@ -72,16 +87,20 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                     final c = filtered[index];
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.1),
                         child: Text(
                           c.name.isNotEmpty ? c.name[0].toUpperCase() : '?',
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary),
                         ),
                       ),
-                      title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(c.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(c.phone ?? 'Không có SĐT'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => Future.microtask(() => context.push('/customers/${c.id}')),
+                      onTap: () => context.push('/customers/${c.id}'),
                     );
                   },
                 );

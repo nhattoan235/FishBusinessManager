@@ -276,6 +276,7 @@ Thêm sản phẩm mới.
 - Tên sản phẩm
 - Đơn vị
 - Giá mặc định
+- Số lượng tồn kho ban đầu (không bắt buộc)
 - Ghi chú
 
 ---
@@ -295,6 +296,9 @@ Kiểm tra dữ liệu.
 ↓
 
 Lưu vào bảng `products`.
+
+Nếu tồn kho ban đầu lớn hơn 0, tạo một bản ghi tăng kho trong
+`inventory_entries` ở cùng Database Transaction.
 
 ↓
 
